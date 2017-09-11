@@ -1,3 +1,4 @@
+import org.rapidoid.log.Log;
 import org.rapidoid.net.Server;
 
 import java.io.*;
@@ -8,25 +9,43 @@ public class Application {
     public static void main(String[] args) throws Exception {
         //((ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger("org.apache.kafka")).setLevel(Level.INFO);
         try {
+            org.apache.log4j.PropertyConfigurator.configure(getConfigStream("log4j.properties"));
+            org.apache.log4j.BasicConfigurator.configure();
+            Log.info("Starting");
             Properties producerProps = new Properties();
-            String programDataDir;
-            if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0) {
-                programDataDir = System.getenv("ProgramData");
-            } else {
-                programDataDir = "/etc";
-            }
-            File producerPropertiesFile = Paths.get(programDataDir, "kontur", "airlock-gate", "producer.properties").toFile();
-            InputStream inputStream = producerPropertiesFile.exists() ?
-                    new FileInputStream(producerPropertiesFile) :
-                    Application.class.getClassLoader().getResourceAsStream("default.producer.properties");
-            //load a properties file from class path, inside static method
-            producerProps.load(inputStream); //);
+            InputStream inputStream = getConfigStream("producer.properties");
+            producerProps.load(inputStream);
             Server httpServer = new HttpServer(new EventSender(producerProps)).listen(8889);
-            //System.out.println(producerProps.toString());
+            Log.info("Server started");
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> shutdown(httpServer)));
             new BufferedReader(new InputStreamReader(System.in)).readLine();
-            httpServer.shutdown();
+            shutdown(httpServer);
         } catch (Exception ex) {
-            ex.printStackTrace();
+            logEx(ex);
         }
+    }
+
+    public static void logEx(Throwable e) {
+        StringWriter sw = new StringWriter();
+        e.printStackTrace(new PrintWriter(sw));
+        Log.error(sw.toString());
+    }
+
+    private static InputStream getConfigStream(String configName) throws FileNotFoundException {
+        String programDataDir;
+        if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0) {
+            programDataDir = System.getenv("ProgramData");
+        } else {
+            programDataDir = "/etc";
+        }
+        File producerPropertiesFile = Paths.get(programDataDir, "kontur", "airlock-gate", configName).toFile();
+        return producerPropertiesFile.exists() ?
+                new FileInputStream(producerPropertiesFile) :
+                Application.class.getClassLoader().getResourceAsStream(configName);
+    }
+
+    private static void shutdown(Server httpServer) {
+        httpServer.shutdown();
+        Log.info("Server stopped");
     }
 }

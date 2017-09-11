@@ -5,8 +5,9 @@ import org.rapidoid.http.HttpStatus;
 import org.rapidoid.http.MediaType;
 import org.rapidoid.net.abstracts.Channel;
 import org.rapidoid.net.impl.RapidoidHelper;
+import scala.App;
 
-import java.util.Map;
+import java.io.IOException;
 
 public class HttpServer extends AbstractHttpServer {
     private static final byte[] URI_PING = "/ping".getBytes();
@@ -36,18 +37,26 @@ public class HttpServer extends AbstractHttpServer {
         } else if (matches(buf, req.path, URI_SEND)) {
             if (req.body == null)
             {
-                this.startResponse(ctx, isKeepAlive);
-                byte[] response = "Empty body".getBytes();
-                this.writeBody(ctx, response, 0, response.length, MediaType.TEXT_PLAIN);
-                return HttpStatus.ERROR;
+                return error(ctx, isKeepAlive, "Empty body");
             }
             byte[] body = new byte[req.body.length];
             buf.get(req.body, body, 0);
-            //eventSender.SendEvent();
-            System.out.println("body size:" + body.length + ", body: " + new String(body));
+            try {
+                eventSender.SendEvent(body);
+            } catch (IOException e) {
+                Application.logEx(e);
+                return error(ctx, isKeepAlive, e.getMessage());
+            }
             return ok(ctx, isKeepAlive, new byte[0], MediaType.TEXT_PLAIN);
         }
         return HttpStatus.NOT_FOUND;
+    }
+
+    private HttpStatus error(Channel ctx, boolean isKeepAlive, String message) {
+        byte[] response = message.getBytes();
+        this.startResponse(ctx, isKeepAlive);
+        this.writeBody(ctx, response, 0, response.length, MediaType.TEXT_PLAIN);
+        return HttpStatus.ERROR;
     }
 
 }
