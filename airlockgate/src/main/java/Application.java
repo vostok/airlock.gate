@@ -38,10 +38,17 @@ public class Application {
         } else {
             programDataDir = "/etc";
         }
-        File producerPropertiesFile = Paths.get(programDataDir, "kontur", "airlock-gate", configName).toFile();
-        return producerPropertiesFile.exists() ?
-                new FileInputStream(producerPropertiesFile) :
+        File file = Paths.get(programDataDir, "kontur", "airlock-gate", configName).toFile();
+        return file.exists() ?
+                new FileInputStream(file) :
                 Application.class.getClassLoader().getResourceAsStream(configName);
+    }
+
+    public static Properties getProperties(String configName) throws IOException {
+        Properties producerProps = new Properties();
+        InputStream configStream = getConfigStream(configName);
+        producerProps.load(configStream);
+        return producerProps;
     }
 
     private static void shutdown(Server httpServer) {

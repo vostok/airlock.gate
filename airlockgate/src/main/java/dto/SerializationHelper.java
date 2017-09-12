@@ -57,7 +57,7 @@ public class SerializationHelper {
     }
 
     public static final short readShort(InputStream stream) throws IOException {
-        byte[] arr = new byte[Long.BYTES];
+        byte[] arr = new byte[Short.BYTES];
         readFixedBytes(stream, arr);
         return ByteBuffer.wrap(arr).getShort();
     }
@@ -77,15 +77,15 @@ public class SerializationHelper {
     private static final void readFixedBytes(InputStream stream, byte[] arr) throws IOException {
         int size = stream.read(arr);
         if (size < arr.length)
-            throw new IOException("Could not read " + arr.length + " bytes");
+            throw new IOException("Could not read " + arr.length + " bytes. Was " + size + " only.");
     }
 
     public static final <T extends BinarySerializable> List<T> readList(InputStream stream, Class<T> itemClass) throws IOException {
 
         int size = readInt(stream);
-        ArrayList<T> list = new ArrayList<T>(size);
+        ArrayList<T> list = new ArrayList<>();
         for (int i = 0; i < size; i++) {
-            T item = null;
+            T item;
             try {
                 item = itemClass.newInstance();
             } catch (InstantiationException e) {
@@ -93,6 +93,7 @@ public class SerializationHelper {
             } catch (IllegalAccessException e) {
                 throw new IOException("Could not create instance", e);
             }
+            item.read(stream);
             list.add(item);
         }
         return list;

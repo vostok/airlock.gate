@@ -18,11 +18,11 @@ public class EventSender {
         this.kafkaProducer = new KafkaProducer<>(properties);
     }
 
-    public void SendEvent(byte[] data) throws IOException {
+    public void SendEvent(String project, byte[] data) throws IOException {
         AirlockMessage message = new AirlockMessage();
         message.read(new ByteArrayInputStream(data));
         for (EventGroup group: message.eventGroups) {
-            String topic = message.project + "-" + group.eventType;
+            String topic = project + "-" + group.eventType;
             for (EventRecord record: group.eventRecords) {
                 kafkaProducer.send(new ProducerRecord<>(topic, null, record.timestamp, null, record.data));
             }

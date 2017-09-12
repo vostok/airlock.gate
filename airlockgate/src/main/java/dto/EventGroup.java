@@ -9,7 +9,7 @@ import java.util.List;
 public class EventGroup implements BinarySerializable
 {
     public short eventType;
-    public List<EventRecord> eventRecords;
+    public List<EventRecord> eventRecords = new ArrayList<>();
 
     @Override
     public void write(OutputStream stream) throws IOException {
