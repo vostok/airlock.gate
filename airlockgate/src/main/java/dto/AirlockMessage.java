@@ -12,7 +12,6 @@ public class AirlockMessage implements BinarySerializable {
     public List<EventGroup> eventGroups = new ArrayList<>();
 
     public void write(OutputStream stream) throws IOException {
-        //version
         SerializationHelper.writeShort(stream, version);
         SerializationHelper.writeList(stream, eventGroups);
     }
