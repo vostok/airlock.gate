@@ -24,6 +24,7 @@ Three main event types:
 **Body**: Serialized [AirlockMessage](#AirlockMessage)
 
 **Headers**
+
 Name        | Type  |
 ------------|-------|
 apikey      | string|
