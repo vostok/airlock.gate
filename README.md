@@ -21,7 +21,7 @@ Three main event types:
 
 **Method**: POST
 
-**Body**: Serialized [AirlockMessage](#AirlockMessage)
+**Body**: Serialized [Airlock Message](#airlockmessage)
 
 **Headers**
 
