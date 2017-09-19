@@ -1,19 +1,12 @@
-import dto.AirlockMessage;
-import dto.BinarySerializable;
-import dto.EventGroup;
-import dto.EventRecord;
+import ru.kontur.airlock.dto.AirlockMessage;
+import ru.kontur.airlock.dto.BinarySerializable;
+import ru.kontur.airlock.dto.EventGroup;
+import ru.kontur.airlock.dto.EventRecord;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 
-import org.junit.Assert;
 import org.junit.Test;
 import org.unitils.reflectionassert.ReflectionAssert;
-import org.unitils.reflectionassert.comparator.Comparator;
 
 public class SerializationTest {
     @Test

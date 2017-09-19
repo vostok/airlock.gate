@@ -1,16 +1,34 @@
+package ru.kontur.airlock;
+
+import com.codahale.metrics.ConsoleReporter;
+import com.codahale.metrics.JmxReporter;
+import com.codahale.metrics.MetricRegistry;
 import org.rapidoid.log.Log;
 import org.rapidoid.net.Server;
 
 import java.io.*;
 import java.nio.file.Paths;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 public class Application {
 
     private static Server httpServer;
+    public static final MetricRegistry metricRegistry = new MetricRegistry();
+
+    private static void initMetrics() {
+        final JmxReporter reporter = JmxReporter.forRegistry(metricRegistry).build();
+        reporter.start();
+        final ConsoleReporter consoleReporter = ConsoleReporter.forRegistry(metricRegistry)
+                .convertRatesTo(TimeUnit.SECONDS)
+                .convertDurationsTo(TimeUnit.MILLISECONDS)
+                .build();
+        consoleReporter.start(1, TimeUnit.MINUTES);
+    }
 
     public static void main(String[] args) throws Exception {
         //((ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger("org.apache.kafka")).setLevel(Level.INFO);
+        initMetrics();
         run();
         Runtime.getRuntime().addShutdownHook(new Thread(() -> shutdown()));
         new BufferedReader(new InputStreamReader(System.in)).readLine();

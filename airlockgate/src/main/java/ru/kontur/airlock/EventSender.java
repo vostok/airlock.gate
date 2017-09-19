@@ -1,6 +1,8 @@
-import dto.AirlockMessage;
-import dto.EventGroup;
-import dto.EventRecord;
+package ru.kontur.airlock;
+
+import ru.kontur.airlock.dto.AirlockMessage;
+import ru.kontur.airlock.dto.EventGroup;
+import ru.kontur.airlock.dto.EventRecord;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.rapidoid.log.Log;

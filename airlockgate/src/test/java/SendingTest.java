@@ -1,6 +1,7 @@
-import dto.AirlockMessage;
-import dto.EventGroup;
-import dto.EventRecord;
+import ru.kontur.airlock.Application;
+import ru.kontur.airlock.dto.AirlockMessage;
+import ru.kontur.airlock.dto.EventGroup;
+import ru.kontur.airlock.dto.EventRecord;
 import org.apache.http.HttpResponse;
 import org.apache.kafka.clients.consumer.*;
 import org.apache.kafka.common.TopicPartition;
@@ -9,11 +10,9 @@ import org.junit.Test;
 import org.apache.http.client.fluent.Request;
 import org.rapidoid.log.Log;
 
-import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class SendingTest {
     @Test

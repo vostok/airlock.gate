@@ -1,4 +1,4 @@
-package dto;
+package ru.kontur.airlock.dto;
 
 import java.io.*;
 
