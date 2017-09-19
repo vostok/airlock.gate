@@ -21,6 +21,8 @@ public abstract class BinarySerializable {
             throw new IOException("Could not create instance", e);
         }
         obj.read(inputStream);
+        if (inputStream.read() > 0)
+            throw new IOException("Some additional data found after reading");
         return obj;
     }
 }

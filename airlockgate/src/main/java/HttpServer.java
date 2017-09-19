@@ -5,12 +5,9 @@ import org.rapidoid.http.HttpStatus;
 import org.rapidoid.http.MediaType;
 import org.rapidoid.net.abstracts.Channel;
 import org.rapidoid.net.impl.RapidoidHelper;
-import scala.App;
 
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
 
@@ -42,7 +39,7 @@ public class HttpServer extends AbstractHttpServer {
             return ok(ctx, isKeepAlive, new byte[0], MediaType.TEXT_PLAIN);
         } else if (matches(buf, req.path, URI_SEND)) {
             String apiKey = getHeader(buf, req, "apikey");
-            if (apiKey == null || apiKey.trim()=="")
+            if (apiKey == null || apiKey.trim().isEmpty())
                 return error(ctx, isKeepAlive, "Undefined apikey", 401);
             if (req.body == null || req.body.length == 0)
             {
@@ -51,7 +48,7 @@ public class HttpServer extends AbstractHttpServer {
             //String project = getHeader(buf, req, "project");
             String project = apiKeyToProject.get(apiKey);
             //HashSet<String> projects = apiKeysToProjects.get(apiKey).;
-            if (project == null || project == "")
+            if (project == null || project.isEmpty())
             //if (projects == null || projects.size())
                 return error(ctx, isKeepAlive, "Access denied", 401);
             byte[] body = new byte[req.body.length];

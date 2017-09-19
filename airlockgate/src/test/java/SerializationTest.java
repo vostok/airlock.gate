@@ -54,12 +54,8 @@ public class SerializationTest {
     }
 
     private void TestObj(BinarySerializable obj, Class classOf) throws Exception {
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        obj.write(outputStream);
-        ByteArrayInputStream inputStream = new ByteArrayInputStream(outputStream.toByteArray());
-        BinarySerializable obj2 = (BinarySerializable)classOf.newInstance();
-        obj2.read(inputStream);
+        byte[] bytes = obj.toByteArray();
+        BinarySerializable obj2 = BinarySerializable.fromByteArray(bytes, classOf);
         ReflectionAssert.assertReflectionEquals(obj, obj2);
-        Assert.assertTrue(inputStream.read() <= 0 );
     }
 }

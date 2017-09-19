@@ -50,10 +50,10 @@ public class Application {
     }
 
     public static Properties getProperties(String configName) throws IOException {
-        Properties producerProps = new Properties();
+        Properties properties = new Properties();
         InputStream configStream = getConfigStream(configName);
-        producerProps.load(configStream);
-        return producerProps;
+        properties.load(configStream);
+        return properties;
     }
 
     public static void shutdown() {
