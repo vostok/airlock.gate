@@ -6,20 +6,25 @@ import java.nio.file.Paths;
 import java.util.Properties;
 
 public class Application {
+
+    private static Server httpServer;
+
     public static void main(String[] args) throws Exception {
         //((ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger("org.apache.kafka")).setLevel(Level.INFO);
+        run();
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> shutdown()));
+        new BufferedReader(new InputStreamReader(System.in)).readLine();
+        shutdown();
+    }
+
+    public static void run() {
         try {
-            org.apache.log4j.PropertyConfigurator.configure(getConfigStream("log4j.properties"));
+            org.apache.log4j.PropertyConfigurator.configure(getProperties("log4j.properties"));
             org.apache.log4j.BasicConfigurator.configure();
             Log.info("Starting");
-            Properties producerProps = new Properties();
-            InputStream inputStream = getConfigStream("producer.properties");
-            producerProps.load(inputStream);
-            Server httpServer = new HttpServer(new EventSender(producerProps)).listen(8889);
+            Properties producerProps = getProperties("producer.properties");
+            httpServer = new HttpServer(new EventSender(producerProps)).listen(8888);
             Log.info("Server started");
-            Runtime.getRuntime().addShutdownHook(new Thread(() -> shutdown(httpServer)));
-            new BufferedReader(new InputStreamReader(System.in)).readLine();
-            shutdown(httpServer);
         } catch (Exception ex) {
             logEx(ex);
         }
@@ -51,7 +56,7 @@ public class Application {
         return producerProps;
     }
 
-    private static void shutdown(Server httpServer) {
+    public static void shutdown() {
         httpServer.shutdown();
         Log.info("Server stopped");
     }

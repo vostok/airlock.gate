@@ -6,7 +6,7 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-public class EventRecord implements BinarySerializable {
+public class EventRecord extends BinarySerializable {
     public long timestamp;
     public byte[] data;
 

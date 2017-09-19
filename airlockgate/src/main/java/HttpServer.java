@@ -18,17 +18,19 @@ public class HttpServer extends AbstractHttpServer {
     private static final byte[] URI_PING = "/ping".getBytes();
     private static final byte[] URI_SEND = "/send".getBytes();
     private final EventSender eventSender;
-    private final Map<String, HashSet<String>> apiKeysToProjects = new HashMap<String, HashSet<String>>();
+    //private final Map<String, HashSet<String>> apiKeysToProjects = new HashMap<String, HashSet<String>>();
+    private final Map<String, String> apiKeyToProject = new HashMap<String, String>();
 
     public HttpServer(EventSender eventSender) throws IOException {
         this.eventSender = eventSender;
         Properties apiKeysProp = Application.getProperties("apikeys.properties");
         for (String key : apiKeysProp.stringPropertyNames()) {
-            String[] projects = apiKeysProp.getProperty(key, "").trim().split("\\s*,\\s*");
-            HashSet<String> projectsHashSet = new HashSet<>();
-            for (String project: projects)
-                projectsHashSet.add(project.toLowerCase());
-            apiKeysToProjects.put(key, projectsHashSet);
+            apiKeyToProject.put(key, apiKeysProp.getProperty(key, "").trim());
+            //String[] projects = apiKeysProp.getProperty(key, "").trim().split("\\s*,\\s*");
+//            HashSet<String> projectsHashSet = new HashSet<>();
+//            for (String project: projects)
+//                projectsHashSet.add(project.toLowerCase());
+//            apiKeysToProjects.put(key, projectsHashSet);
         }
     }
 
@@ -41,14 +43,16 @@ public class HttpServer extends AbstractHttpServer {
         } else if (matches(buf, req.path, URI_SEND)) {
             String apiKey = getHeader(buf, req, "apikey");
             if (apiKey == null || apiKey.trim()=="")
-                return error(ctx, isKeepAlive, "Undefined apikey", 400);
+                return error(ctx, isKeepAlive, "Undefined apikey", 401);
             if (req.body == null || req.body.length == 0)
             {
                 return error(ctx, isKeepAlive, "Empty body", 400);
             }
-            String project = getHeader(buf, req, "project");
-            HashSet<String> projects = apiKeysToProjects.get(apiKey);
-            if (projects == null || projects.contains(project.toLowerCase()))
+            //String project = getHeader(buf, req, "project");
+            String project = apiKeyToProject.get(apiKey);
+            //HashSet<String> projects = apiKeysToProjects.get(apiKey).;
+            if (project == null || project == "")
+            //if (projects == null || projects.size())
                 return error(ctx, isKeepAlive, "Access denied", 401);
             byte[] body = new byte[req.body.length];
             buf.get(req.body, body, 0);

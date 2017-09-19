@@ -7,7 +7,7 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AirlockMessage implements BinarySerializable {
+public class AirlockMessage extends BinarySerializable {
     public static final short version = 1;
     public List<EventGroup> eventGroups = new ArrayList<>();
 

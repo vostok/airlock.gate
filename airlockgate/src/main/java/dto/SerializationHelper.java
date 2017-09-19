@@ -88,9 +88,7 @@ public class SerializationHelper {
             T item;
             try {
                 item = itemClass.newInstance();
-            } catch (InstantiationException e) {
-                throw new IOException("Could not create instance", e);
-            } catch (IllegalAccessException e) {
+            } catch (Exception e) {
                 throw new IOException("Could not create instance", e);
             }
             item.read(stream);
