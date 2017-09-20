@@ -11,6 +11,7 @@ import org.rapidoid.net.abstracts.Channel;
 import org.rapidoid.net.impl.RapidoidHelper;
 
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -20,12 +21,15 @@ import static com.codahale.metrics.MetricRegistry.name;
 public class HttpServer extends AbstractHttpServer {
     private static final byte[] URI_PING = "/ping".getBytes();
     private static final byte[] URI_SEND = "/send".getBytes();
+    private static final byte[] URI_TH = "/th".getBytes();
+    private static final byte[] URI_THMB = "/thmb".getBytes();
     private final EventSender eventSender;
     //private final Map<String, HashSet<String>> apiKeysToProjects = new HashMap<String, HashSet<String>>();
     private final Map<String, String> apiKeyToProject = new HashMap<String, String>();
     private final Meter requestMeter = Application.metricRegistry.meter(name(HttpServer.class,"requests"));
     private final Meter requestSizeMeter = Application.metricRegistry.meter(name(HttpServer.class,"request-size"));
     private final Timer responses = Application.metricRegistry.timer(name(HttpServer.class, "responses"));
+    private final DecimalFormat format = new DecimalFormat("#.##");
 
     public HttpServer(EventSender eventSender) throws IOException {
         this.eventSender = eventSender;
@@ -48,6 +52,10 @@ public class HttpServer extends AbstractHttpServer {
             return ok(ctx, isKeepAlive, new byte[0], MediaType.TEXT_PLAIN);
         } else if (matches(buf, req.path, URI_SEND)) {
             return send(ctx, buf, req, isKeepAlive);
+        } else if (matches(buf, req.path, URI_TH)) {
+            return ok(ctx, isKeepAlive, format.format(requestMeter.getMeanRate()).getBytes(), MediaType.TEXT_PLAIN);
+        } else if (matches(buf, req.path, URI_THMB)) {
+            return ok(ctx, isKeepAlive, format.format(requestSizeMeter.getMeanRate()/1024).getBytes(), MediaType.TEXT_PLAIN);
         }
         return HttpStatus.NOT_FOUND;
     }
