@@ -1,3 +1,4 @@
+import org.junit.Ignore;
 import ru.kontur.airlock.dto.AirlockMessage;
 import ru.kontur.airlock.dto.BinarySerializable;
 import ru.kontur.airlock.dto.EventGroup;
@@ -18,6 +19,7 @@ public class SerializationTest {
     }
 
     @Test
+    @Ignore
     public void PrepareAmmo() throws Exception {
         AirlockMessage message = getAirlockMessage();
         byte[] body = message.toByteArray();

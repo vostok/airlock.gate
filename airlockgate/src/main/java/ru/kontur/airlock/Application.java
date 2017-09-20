@@ -31,7 +31,7 @@ public class Application {
         run();
         Runtime.getRuntime().addShutdownHook(new Thread(() -> shutdown()));
         new BufferedReader(new InputStreamReader(System.in)).readLine();
-        shutdown();
+        //shutdown();
     }
 
     public static void run() {

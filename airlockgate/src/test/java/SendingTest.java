@@ -14,9 +14,10 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+@Ignore
 public class SendingTest {
+
     @Test
-    @Ignore
     public void sendManyRequests() throws Exception {
         Application.run();
         for (int i = 0; i < 100000; i++) {

@@ -106,7 +106,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>EntryPoint</mainClass>
+                            <mainClass>ru.kontur.airlock.Application</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
