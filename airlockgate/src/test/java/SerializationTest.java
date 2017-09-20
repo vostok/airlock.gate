@@ -23,12 +23,14 @@ public class SerializationTest {
     public void PrepareAmmo() throws Exception {
         AirlockMessage message = getAirlockMessage();
         byte[] body = message.toByteArray();
-        FileOutputStream fos = new FileOutputStream("d:\\downloads\\ammo");
+        FileOutputStream fos = new FileOutputStream("ammo");
         //s.getBytes(StandardCharsets.UTF_8)
         byte[] headers =
             ("POST /send HTTP/1.0\r\n" +
             "Content-Length: "+ body.length +"\r\n" +
-            "Host: icat-test04:8888\r\n\r\n").getBytes(StandardCharsets.US_ASCII);
+            "Host: icat-test04:8888\r\n" +
+            "apikey: 8bb9d519-ae52-4c17-ad7a-d871dbd665fe\r\n" +
+                    "\r\n").getBytes(StandardCharsets.US_ASCII);
         int requestSize = headers.length + body.length;
         fos.write(("" + requestSize + "\r\n").getBytes(StandardCharsets.US_ASCII));
         fos.write(headers);
