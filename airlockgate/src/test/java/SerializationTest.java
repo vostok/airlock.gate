@@ -5,6 +5,7 @@ import ru.kontur.airlock.dto.EventGroup;
 import ru.kontur.airlock.dto.EventRecord;
 
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
@@ -21,9 +22,15 @@ public class SerializationTest {
     @Test
     @Ignore
     public void PrepareAmmo() throws Exception {
-        AirlockMessage message = getAirlockMessage();
+        InternalPrepareAmmo(10);
+        InternalPrepareAmmo(100);
+        InternalPrepareAmmo(1000);
+    }
+
+    private void InternalPrepareAmmo(int eventSize) throws IOException {
+        AirlockMessage message = getAirlockMessage(1,100,eventSize);
         byte[] body = message.toByteArray();
-        FileOutputStream fos = new FileOutputStream("ammo");
+        FileOutputStream fos = new FileOutputStream("ammo" + eventSize);
         //s.getBytes(StandardCharsets.UTF_8)
         byte[] headers =
             ("POST /send HTTP/1.0\r\n" +
@@ -39,6 +46,10 @@ public class SerializationTest {
     }
 
     public static AirlockMessage getAirlockMessage() {
+        return getAirlockMessage(3,10,10);
+    }
+
+    public static AirlockMessage getAirlockMessage(int eventTypeCount, int eventRecordCount, int eventSize) {
 //        EventRecord event = new EventRecord();
 //        event.timestamp = System.currentTimeMillis();
 //        event.data = new byte[10];
@@ -49,15 +60,15 @@ public class SerializationTest {
 
         long ts = System.currentTimeMillis();
         AirlockMessage message = new AirlockMessage();
-        for (int i = 1; i <= 3; i++) {
+        for (int i = 1; i <= eventTypeCount; i++) {
             EventGroup eventGroup = new EventGroup();
             eventGroup.eventType = (short)(i);
             eventGroup.eventRecords = new ArrayList<>();
-            for (int j = 0; j < 10; j++) {
+            for (int j = 0; j < eventRecordCount; j++) {
                 EventRecord eventRecord = new EventRecord();
                 eventRecord.timestamp = ts++;
-                eventRecord.data = new byte[10];
-                for (int k = 0; k < 10; k++) {
+                eventRecord.data = new byte[eventSize];
+                for (int k = 0; k < eventSize; k++) {
                     eventRecord.data[k] = (byte)((i+j+k) % 256);
                 }
                 //TestObj(eventRecord, EventRecord.class);

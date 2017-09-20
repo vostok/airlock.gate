@@ -19,11 +19,11 @@ public class Application {
     private static void initMetrics() {
         final JmxReporter reporter = JmxReporter.forRegistry(metricRegistry).build();
         reporter.start();
-        final ConsoleReporter consoleReporter = ConsoleReporter.forRegistry(metricRegistry)
-                .convertRatesTo(TimeUnit.SECONDS)
-                .convertDurationsTo(TimeUnit.MILLISECONDS)
-                .build();
-        consoleReporter.start(1, TimeUnit.SECONDS);
+//        final ConsoleReporter consoleReporter = ConsoleReporter.forRegistry(metricRegistry)
+//                .convertRatesTo(TimeUnit.SECONDS)
+//                .convertDurationsTo(TimeUnit.MILLISECONDS)
+//                .build();
+//        consoleReporter.start(1, TimeUnit.SECONDS);
     }
 
     public static void main(String[] args) throws Exception {

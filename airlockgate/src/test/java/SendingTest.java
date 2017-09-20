@@ -20,7 +20,7 @@ public class SendingTest {
     @Test
     public void sendManyRequests() throws Exception {
         Application.run();
-        for (int i = 0; i < 100000; i++) {
+        for (int i = 0; i < 1000000; i++) {
             AirlockMessage airlockMessage = SerializationTest.getAirlockMessage();
             Request request = Request.Post("http://localhost:8888/send")
                     .connectTimeout(1000)
