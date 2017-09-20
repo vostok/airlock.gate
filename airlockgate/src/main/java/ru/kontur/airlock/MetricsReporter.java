@@ -12,18 +12,18 @@ public class MetricsReporter {
     private double lastThroughput = 0;
     private long lastThroughputBytes = 0;
 
-    private long lastRequestCount = 0;
+    private long lastEventCount = 0;
     private long lastRequestSizeCount = 0;
 
-    public MetricsReporter(int reportingIntervalSeconds, Meter requestMeter, Meter requestSizeMeter) {
+    public MetricsReporter(int reportingIntervalSeconds, Meter eventMeter, Meter requestSizeMeter) {
         ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
         executor.scheduleAtFixedRate(() -> {
             synchronized (this) {
-                long prevRequestCount = lastRequestCount;
+                long prevEventCount = lastEventCount;
                 long prevRequestSizeCount = lastRequestSizeCount;
-                lastRequestCount = requestMeter.getCount();
+                lastEventCount = eventMeter.getCount();
                 lastRequestSizeCount = requestSizeMeter.getCount();
-                lastThroughput = ((double) (lastRequestCount - prevRequestCount)) / reportingIntervalSeconds;
+                lastThroughput = ((double) (lastEventCount - prevEventCount)) / reportingIntervalSeconds;
                 lastThroughputBytes = (lastRequestSizeCount - prevRequestSizeCount) / reportingIntervalSeconds;
             }
             Log.info(String.format("Thr-put: %s events/sec; Thr-put: %s Kb/sec", getLastThroughput(), getLastThroughputKb()));

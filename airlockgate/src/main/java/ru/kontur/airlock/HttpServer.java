@@ -9,6 +9,8 @@ import org.rapidoid.http.HttpStatus;
 import org.rapidoid.http.MediaType;
 import org.rapidoid.net.abstracts.Channel;
 import org.rapidoid.net.impl.RapidoidHelper;
+import ru.kontur.airlock.dto.AirlockMessage;
+import ru.kontur.airlock.dto.EventGroup;
 
 import java.io.IOException;
 import java.text.DecimalFormat;
@@ -28,13 +30,14 @@ public class HttpServer extends AbstractHttpServer {
     private final Map<String, String> apiKeyToProject = new HashMap<String, String>();
     private final Meter requestMeter = Application.metricRegistry.meter(name(HttpServer.class,"requests"));
     private final Meter requestSizeMeter = Application.metricRegistry.meter(name(HttpServer.class,"request-size"));
+    private final Meter eventMeter = Application.metricRegistry.meter(name(HttpServer.class,"events"));
     private final Timer responses = Application.metricRegistry.timer(name(HttpServer.class, "responses"));
     private final DecimalFormat format = new DecimalFormat("#.##");
     private final MetricsReporter metricsReporter;
 
     public HttpServer(EventSender eventSender) throws IOException {
         this.eventSender = eventSender;
-        metricsReporter = new MetricsReporter(3, requestMeter, requestSizeMeter);
+        metricsReporter = new MetricsReporter(3, eventMeter, requestSizeMeter);
         Properties apiKeysProp = Application.getProperties("apikeys.properties");
         for (String key : apiKeysProp.stringPropertyNames()) {
             apiKeyToProject.put(key, apiKeysProp.getProperty(key, "").trim());
@@ -63,8 +66,6 @@ public class HttpServer extends AbstractHttpServer {
     }
 
     private HttpStatus send(Channel ctx, Buf buf, RapidoidHelper req, boolean isKeepAlive) {
-        requestMeter.mark();
-        requestSizeMeter.mark(req.body.length);
         final Timer.Context context = responses.time();
         try {
             String apiKey = getHeader(buf, req, "apikey");
@@ -83,7 +84,15 @@ public class HttpServer extends AbstractHttpServer {
             byte[] body = new byte[req.body.length];
             buf.get(req.body, body, 0);
             try {
-                eventSender.SendEvent(project, body);
+                AirlockMessage message = AirlockMessage.fromByteArray(body, AirlockMessage.class);
+                eventSender.send(project, message);
+                requestMeter.mark();
+                requestSizeMeter.mark(req.body.length);
+                int eventCount = 0;
+                for (EventGroup group: message.eventGroups) {
+                    eventCount += group.eventRecords.size();
+                }
+                eventMeter.mark(eventCount);
             } catch (IOException e) {
                 Application.logEx(e);
                 return error(ctx, isKeepAlive, e.getMessage(), 400);

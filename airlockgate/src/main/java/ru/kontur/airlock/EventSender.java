@@ -21,9 +21,7 @@ public class EventSender {
         this.kafkaProducer = new KafkaProducer<>(properties);
     }
 
-    public void SendEvent(String project, byte[] data) throws IOException {
-        AirlockMessage message = new AirlockMessage();
-        message.read(new ByteArrayInputStream(data));
+    public void send(String project, AirlockMessage message) throws IOException {
         for (EventGroup group: message.eventGroups) {
             String topic = project + "-" + group.eventType;
             //Log.info("Send " + group.eventRecords.size() + " records to " + topic);
