@@ -23,7 +23,8 @@ public class HttpServer extends AbstractHttpServer {
     private final EventSender eventSender;
     //private final Map<String, HashSet<String>> apiKeysToProjects = new HashMap<String, HashSet<String>>();
     private final Map<String, String> apiKeyToProject = new HashMap<String, String>();
-    private final Meter requestMeter;
+    private final Meter requestMeter = Application.metricRegistry.meter(name(HttpServer.class,"requests"));
+    private final Meter requestSizeMeter = Application.metricRegistry.meter(name(HttpServer.class,"request-size"));
     private final Timer responses = Application.metricRegistry.timer(name(HttpServer.class, "responses"));
 
     public HttpServer(EventSender eventSender) throws IOException {
@@ -37,7 +38,6 @@ public class HttpServer extends AbstractHttpServer {
 //                projectsHashSet.add(project.toLowerCase());
 //            apiKeysToProjects.put(key, projectsHashSet);
         }
-        requestMeter = Application.metricRegistry.meter("requests");
     }
 
     @Override
@@ -47,36 +47,41 @@ public class HttpServer extends AbstractHttpServer {
         if (matches(buf, req.path, URI_PING)) {
             return ok(ctx, isKeepAlive, new byte[0], MediaType.TEXT_PLAIN);
         } else if (matches(buf, req.path, URI_SEND)) {
-            requestMeter.mark();
-            final Timer.Context context = responses.time();
-            try {
-                String apiKey = getHeader(buf, req, "apikey");
-                if (apiKey == null || apiKey.trim().isEmpty())
-                    return error(ctx, isKeepAlive, "Undefined apikey", 401);
-                if (req.body == null || req.body.length == 0)
-                {
-                    return error(ctx, isKeepAlive, "Empty body", 400);
-                }
-                //String project = getHeader(buf, req, "project");
-                String project = apiKeyToProject.get(apiKey);
-                //HashSet<String> projects = apiKeysToProjects.get(apiKey).;
-                if (project == null || project.isEmpty())
-                    //if (projects == null || projects.size())
-                    return error(ctx, isKeepAlive, "Access denied", 401);
-                byte[] body = new byte[req.body.length];
-                buf.get(req.body, body, 0);
-                try {
-                    eventSender.SendEvent(project, body);
-                } catch (IOException e) {
-                    Application.logEx(e);
-                    return error(ctx, isKeepAlive, e.getMessage(), 400);
-                }
-                return ok(ctx, isKeepAlive, new byte[0], MediaType.TEXT_PLAIN);
-            } finally {
-                context.stop();
-            }
+            return send(ctx, buf, req, isKeepAlive);
         }
         return HttpStatus.NOT_FOUND;
+    }
+
+    private HttpStatus send(Channel ctx, Buf buf, RapidoidHelper req, boolean isKeepAlive) {
+        requestMeter.mark();
+        requestSizeMeter.mark(req.body.length);
+        final Timer.Context context = responses.time();
+        try {
+            String apiKey = getHeader(buf, req, "apikey");
+            if (apiKey == null || apiKey.trim().isEmpty())
+                return error(ctx, isKeepAlive, "Undefined apikey", 401);
+            if (req.body == null || req.body.length == 0)
+            {
+                return error(ctx, isKeepAlive, "Empty body", 400);
+            }
+            //String project = getHeader(buf, req, "project");
+            String project = apiKeyToProject.get(apiKey);
+            //HashSet<String> projects = apiKeysToProjects.get(apiKey).;
+            if (project == null || project.isEmpty())
+                //if (projects == null || projects.size())
+                return error(ctx, isKeepAlive, "Access denied", 401);
+            byte[] body = new byte[req.body.length];
+            buf.get(req.body, body, 0);
+            try {
+                eventSender.SendEvent(project, body);
+            } catch (IOException e) {
+                Application.logEx(e);
+                return error(ctx, isKeepAlive, e.getMessage(), 400);
+            }
+            return ok(ctx, isKeepAlive, new byte[0], MediaType.TEXT_PLAIN);
+        } finally {
+            context.stop();
+        }
     }
 
     private String getHeader(Buf buf, RapidoidHelper req, String name) {

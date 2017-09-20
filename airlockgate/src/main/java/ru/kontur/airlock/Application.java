@@ -23,12 +23,11 @@ public class Application {
                 .convertRatesTo(TimeUnit.SECONDS)
                 .convertDurationsTo(TimeUnit.MILLISECONDS)
                 .build();
-        consoleReporter.start(1, TimeUnit.MINUTES);
+        consoleReporter.start(1, TimeUnit.SECONDS);
     }
 
     public static void main(String[] args) throws Exception {
         //((ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger("org.apache.kafka")).setLevel(Level.INFO);
-        initMetrics();
         run();
         Runtime.getRuntime().addShutdownHook(new Thread(() -> shutdown()));
         new BufferedReader(new InputStreamReader(System.in)).readLine();
@@ -40,8 +39,11 @@ public class Application {
             org.apache.log4j.PropertyConfigurator.configure(getProperties("log4j.properties"));
             org.apache.log4j.BasicConfigurator.configure();
             Log.info("Starting");
+            initMetrics();
             Properties producerProps = getProperties("producer.properties");
-            httpServer = new HttpServer(new EventSender(producerProps)).listen(8888);
+            Properties appProperties = getProperties("app.properties");
+            int port = Integer.parseInt(appProperties.getProperty("port", "8888"));
+            httpServer = new HttpServer(new EventSender(producerProps)).listen(port);
             Log.info("Server started");
         } catch (Exception ex) {
             logEx(ex);

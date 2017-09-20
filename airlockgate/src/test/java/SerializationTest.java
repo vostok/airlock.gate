@@ -3,6 +3,8 @@ import ru.kontur.airlock.dto.BinarySerializable;
 import ru.kontur.airlock.dto.EventGroup;
 import ru.kontur.airlock.dto.EventRecord;
 
+import java.io.FileOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
 import org.junit.Test;
@@ -13,6 +15,23 @@ public class SerializationTest {
     public void Serialization() throws Exception {
         AirlockMessage message = getAirlockMessage();
         TestObj(message, AirlockMessage.class);
+    }
+
+    @Test
+    public void PrepareAmmo() throws Exception {
+        AirlockMessage message = getAirlockMessage();
+        byte[] body = message.toByteArray();
+        FileOutputStream fos = new FileOutputStream("d:\\downloads\\ammo");
+        //s.getBytes(StandardCharsets.UTF_8)
+        byte[] headers =
+            ("POST /send HTTP/1.0\r\n" +
+            "Content-Length: "+ body.length +"\r\n" +
+            "Host: icat-test04:8888\r\n\r\n").getBytes(StandardCharsets.US_ASCII);
+        int requestSize = headers.length + body.length;
+        fos.write(("" + requestSize + "\r\n").getBytes(StandardCharsets.US_ASCII));
+        fos.write(headers);
+        fos.write(body);
+        fos.close();
     }
 
     public static AirlockMessage getAirlockMessage() {
