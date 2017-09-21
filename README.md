@@ -32,7 +32,7 @@ apikey      | string|
 
 ## Message structure
 
-Assume big endian for primitive types.
+Assume little endian for primitive types.
 
 ### AirlockMessage
 Description        | Type  | Size (bytes)
