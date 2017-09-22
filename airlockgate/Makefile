@@ -69,7 +69,7 @@ clean:
 
 tar:
 	mkdir -p build/root/usr/lib/vostok/airlock
-	mv /target/vostok-airlock-gate-$(VERSION)-SNAPSHOT.jar build/root/usr/lib/vostok/airlock/gate.jar
+	mv target/vostok-airlock-gate-$(VERSION)-SNAPSHOT.jar build/root/usr/lib/vostok/airlock/gate.jar
 	tar -czvPf build/vostok-airlock-gate-$(VERSION).$(RELEASE).tar.gz -C build/root  .
 
 rpm:
