@@ -5,9 +5,9 @@ cache: false
 sudo: true
 
 install:
-  - make build-java
+  - cd airlockgate && make build
 script:
-  - make packages
+  - cd airlockgate && make packages
 before_deploy:
   - export RELEASE_PKG_TAR=$(ls build/vostok-airlock-gate*.tar.gz)
   - export RELEASE_PKG_RPM=$(ls build/vostok-airlock-gate*.rpm)
