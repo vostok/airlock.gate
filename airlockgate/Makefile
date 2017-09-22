@@ -2,7 +2,7 @@
 .PHONY: run-java-gate kill-java build-java
 
 VERSION := 1.0
-RELEASE := $(shell git describe --always --tags | awk -F- '{ if ($$2) dot="."} END { printf "%s%s%s\n",$$2,dot,$$3}')
+RELEASE := $(shell git describe --always --tags)
 VENDOR := "SKB Kontur"
 LICENSE := MIT
 URL := https://github.com/vostok-project/airlock
