@@ -4,8 +4,10 @@ jdk:
 cache: false
 sudo: true
 
+before_install:
+  - cd airlockgate && make prepare_for_travis
 install:
-  - cd airlockgate && make build
+  - make build
 script:
   - make packages
 before_deploy:

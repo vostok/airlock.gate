@@ -23,6 +23,11 @@ run-java-gate: build-java
 kill-java:
 	pgrep java | awk '{system("kill -9 "$$1)}'
 
+prepare_for_travis:
+	sudo apt-get -qq update
+	sudo apt-get install -y rpm ruby-dev gcc make
+	gem install fpm
+
 build:
 	mvn clean package
 
