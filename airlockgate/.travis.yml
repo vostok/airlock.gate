@@ -1,0 +1,22 @@
+language: java
+jdk:
+- oraclejdk8
+cache: false
+sudo: true
+
+install:
+  - make build-java
+script:
+  - make packages
+before_deploy:
+  - export RELEASE_PKG_TAR=$(ls build/vostok-airlock-gate*.tar.gz)
+  - export RELEASE_PKG_RPM=$(ls build/vostok-airlock-gate*.rpm)
+  - export RELEASE_PKG_DEB=$(ls build/vostok-airlock-gate*.deb)
+  - export PACKAGE_NAME=$(ls build/vostok-airlock-gate*.rpm | tail -n1)
+deploy:
+- provider: script
+  script: "curl -sS --fail -F \"uploadfile=@${PACKAGE_NAME}\" -H 'token: ${UPLOAD_TOKEN}' \"${UPLOAD_URL}\""
+  skip_cleanup: true
+  on:
+    repo: vostok-project/airlock
+    all_branches: true
