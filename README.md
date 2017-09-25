@@ -6,6 +6,18 @@ Three main event types:
  - Metric events
  - Tracing events
 
+## Installation
+
+1. Add settings files to /etc/kontur/airlock-gate (linux) or c:\ProgramData\kontur\airlock-gate (windows), see samples at ./airlockgate/src/main/resources. If settings file is not found then it will be loaded from resources.    
+2. run command: `make run-java-gate`
+
+Settings file | description
+--------| -----
+apikeys.properties | Key-value list. Key is api key. Value is project name (used for topic name)
+app.properties | application settings
+log4j.properties | logging settings
+producer.properties | kafka settings, see https://github.com/edenhill/librdkafka/blob/master/CONFIGURATION.md
+
 ## Api methods
 
 ### Ping
