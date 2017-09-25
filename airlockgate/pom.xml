@@ -20,6 +20,7 @@
         <kafka.scala.version>2.11</kafka.scala.version>
         <confluent.version>3.3.0</confluent.version>
         <jackson.version>2.7.0</jackson.version>
+        <metrics.version>3.2.5</metrics.version>
     </properties>
 
     <dependencies>
@@ -41,12 +42,12 @@
         <dependency>
             <groupId>io.dropwizard.metrics</groupId>
             <artifactId>metrics-core</artifactId>
-            <version>3.2.5</version>
+            <version>${metrics.version}</version>
         </dependency>
         <dependency>
             <groupId>io.dropwizard.metrics</groupId>
             <artifactId>metrics-graphite</artifactId>
-            <version>3.2.5</version>
+            <version>${metrics.version}</version>
         </dependency>
 
         <dependency>

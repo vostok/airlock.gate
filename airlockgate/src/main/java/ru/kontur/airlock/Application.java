@@ -1,13 +1,18 @@
 package ru.kontur.airlock;
 
 import com.codahale.metrics.JmxReporter;
+import com.codahale.metrics.MetricFilter;
 import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.graphite.Graphite;
+import com.codahale.metrics.graphite.GraphiteReporter;
 import org.rapidoid.log.Log;
 import org.rapidoid.net.Server;
 
 import java.io.*;
+import java.net.InetSocketAddress;
 import java.nio.file.Paths;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 public class Application {
 
@@ -15,8 +20,29 @@ public class Application {
     static final MetricRegistry metricRegistry = new MetricRegistry();
 
     private static void initMetrics() {
-        final JmxReporter reporter = JmxReporter.forRegistry(metricRegistry).build();
-        reporter.start();
+
+        String prefix = System.getenv("GRAPHITE_PREFIX");
+        String host = System.getenv("GRAPHITE_HOST");
+        String portString = System.getenv("GRAPHITE_PORT");
+        String periodString = System.getenv("GRAPHITE_PERIOD");
+
+        if (null != prefix && null != host && null != periodString && null != portString) {
+            int period = Integer.parseInt(periodString);
+            int port = Integer.parseInt(portString);
+
+            final Graphite graphite = new Graphite(new InetSocketAddress(host, port));
+            final GraphiteReporter reporter = GraphiteReporter.forRegistry(metricRegistry)
+                    .prefixedWith(prefix)
+                    .convertRatesTo(TimeUnit.SECONDS)
+                    .convertDurationsTo(TimeUnit.MILLISECONDS)
+                    .filter(MetricFilter.ALL)
+                    .build(graphite);
+            reporter.start(period, TimeUnit.SECONDS);
+        } else {
+            final JmxReporter reporter = JmxReporter.forRegistry(metricRegistry).build();
+            reporter.start();
+        }
+
 //        final ConsoleReporter consoleReporter = ConsoleReporter.forRegistry(metricRegistry)
 //                .convertRatesTo(TimeUnit.SECONDS)
 //                .convertDurationsTo(TimeUnit.MILLISECONDS)
