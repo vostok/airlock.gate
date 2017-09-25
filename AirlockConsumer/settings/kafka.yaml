@@ -1,0 +1,11 @@
+bootstrap.servers: "localhost:9092"
+queued.min.messages: 2000000
+queued.max.messages.kbytes: 50050000
+fetch.message.max.bytes: 1000000
+fetch.wait.max.ms: 1000
+receive.message.max.bytes: 52500000
+max.in.flight.requests.per.connection: 500000
+session.timeout.ms: 7500
+auto.commit.interval.ms: 3000
+client.id: airlock
+group.id: airlock
