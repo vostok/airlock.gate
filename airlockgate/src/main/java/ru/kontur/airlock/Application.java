@@ -1,6 +1,5 @@
 package ru.kontur.airlock;
 
-import com.codahale.metrics.ConsoleReporter;
 import com.codahale.metrics.JmxReporter;
 import com.codahale.metrics.MetricRegistry;
 import org.rapidoid.log.Log;
@@ -9,12 +8,11 @@ import org.rapidoid.net.Server;
 import java.io.*;
 import java.nio.file.Paths;
 import java.util.Properties;
-import java.util.concurrent.TimeUnit;
 
 public class Application {
 
     private static Server httpServer;
-    public static final MetricRegistry metricRegistry = new MetricRegistry();
+    static final MetricRegistry metricRegistry = new MetricRegistry();
 
     private static void initMetrics() {
         final JmxReporter reporter = JmxReporter.forRegistry(metricRegistry).build();
@@ -29,7 +27,7 @@ public class Application {
     public static void main(String[] args) throws Exception {
         //((ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger("org.apache.kafka")).setLevel(Level.INFO);
         run();
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> shutdown()));
+        Runtime.getRuntime().addShutdownHook(new Thread(Application::shutdown));
         new BufferedReader(new InputStreamReader(System.in)).readLine();
         //shutdown();
     }
@@ -43,6 +41,10 @@ public class Application {
             Properties producerProps = getProperties("producer.properties");
             Properties appProperties = getProperties("app.properties");
             int port = Integer.parseInt(appProperties.getProperty("port", "8888"));
+            String servers = System.getenv("KAFKA_SERVERS");
+            if (!servers.isEmpty()) {
+                producerProps.setProperty("bootstrap.servers", servers);
+            }
             httpServer = new HttpServer(new EventSender(producerProps)).listen(port);
             Log.info("Server started");
         } catch (Exception ex) {
@@ -50,7 +52,7 @@ public class Application {
         }
     }
 
-    public static void logEx(Throwable e) {
+    static void logEx(Throwable e) {
         StringWriter sw = new StringWriter();
         e.printStackTrace(new PrintWriter(sw));
         Log.error(sw.toString());
@@ -58,7 +60,7 @@ public class Application {
 
     private static InputStream getConfigStream(String configName) throws FileNotFoundException {
         String programDataDir;
-        if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0) {
+        if (System.getProperty("os.name").toLowerCase().contains("win")) {
             programDataDir = System.getenv("ProgramData");
         } else {
             programDataDir = "/etc";
@@ -69,7 +71,7 @@ public class Application {
                 Application.class.getClassLoader().getResourceAsStream(configName);
     }
 
-    public static Properties getProperties(String configName) throws IOException {
+    static Properties getProperties(String configName) throws IOException {
         Properties properties = new Properties();
         InputStream configStream = getConfigStream(configName);
         properties.load(configStream);
