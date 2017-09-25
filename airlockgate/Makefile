@@ -1,8 +1,9 @@
 .PHONY: fire pull
 .PHONY: run-java-gate kill-java build-java
 
-VERSION := 1.0
-RELEASE := $(shell git describe --always --tags)
+VERSION := $(shell git describe --always --tags --abbrev=0 | tail -c +2)
+RELEASE := $(shell git describe --always --tags | awk -F- '{ if ($$2) dot="."} END { printf "1%s%s%s%s\n",dot,$$2,dot,$$3}')
+
 VENDOR := "SKB Kontur"
 LICENSE := MIT
 URL := https://github.com/vostok-project/airlock
