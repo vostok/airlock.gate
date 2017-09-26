@@ -71,12 +71,12 @@ namespace AirlockSimpleSerializators
 
         public void Write(string value, Encoding encoding)
         {
-            throw new NotImplementedException();
+            Write(encoding.GetBytes(value));
         }
 
         public void WriteWithoutLengthPrefix(string value, Encoding encoding)
         {
-            throw new NotImplementedException();
+            WriteWithoutLengthPrefix(encoding.GetBytes(value));
         }
 
         public void Write(byte[] value)

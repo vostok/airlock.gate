@@ -1,9 +1,9 @@
-using System;
+using System.Collections.Generic;
 
 namespace AirlockConsumer
 {
-    public interface IMessageProcessor<in T>
+    public interface IMessageProcessor<T>
     {
-        void Process(DateTime timestamp, T message);
+        void Process(T[] message);
     }
 }

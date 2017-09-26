@@ -15,14 +15,13 @@ namespace AirlockConsumerTest
         {
             this.output = output;
         }
+
         [Fact]
         public void Read()
         {
             var settings = Util.ReadYamlSettings<Dictionary<string, object>>("kafka.yaml");
-            foreach (var kv in settings)
-            {
-                output.WriteLine($"{kv.Key}: {kv.Value} {kv.Value.GetType().Name}");
-            }
+            Assert.True(settings.ContainsKey("fetch.wait.max.ms"));
+            Assert.Equal("1000", settings["fetch.wait.max.ms"]);
         }
     }
 }

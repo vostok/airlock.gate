@@ -15,15 +15,4 @@ namespace AirlockSimpleSerializators
         public Stream WriteStream { get; }
         public IBinaryWriter Writer { get; }
     }
-
-    public class SimpleAirlockDeserializationSink : IAirlockDeserializationSink
-    {
-        public SimpleAirlockDeserializationSink(Stream stream)
-        {
-            ReadStream = stream;
-            Reader = new SimpleBinaryReader(stream);
-        }
-        public Stream ReadStream { get; }
-        public IBinaryReader Reader { get; }
-    }
 }

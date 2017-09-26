@@ -5,7 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Vostok.Core" Version="1.0.0-pre000038" />
+    <PackageReference Include="Vostok.Core" Version="1.0.0-pre000040" />
   </ItemGroup>
 
 </Project>

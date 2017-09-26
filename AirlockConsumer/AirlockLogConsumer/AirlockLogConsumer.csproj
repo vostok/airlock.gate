@@ -8,9 +8,13 @@
   <ItemGroup>
     <PackageReference Include="Serilog.Sinks.Console" Version="3.1.0" />
     <PackageReference Include="Serilog.Sinks.RollingFile" Version="3.3.0" />
-    <PackageReference Include="Vostok.Core" Version="1.0.0-pre000038" />
+    <PackageReference Include="Vostok.Core" Version="1.0.0-pre000040" />
     <PackageReference Include="Vostok.Logging.Serilog" Version="1.0.0-pre000008" />
     <PackageReference Include="YamlDotNet.NetCore" Version="1.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AirlockConsumer\AirlockConsumer.csproj" />
   </ItemGroup>
 
 </Project>
