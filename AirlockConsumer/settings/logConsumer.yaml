@@ -1,0 +1,3 @@
+BatchSize: 1000
+ElasticUriList:
+  - 'http://devops-consul1.dev.kontur.ru:9200/'

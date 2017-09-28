@@ -4,6 +4,6 @@ namespace AirlockConsumer
 {
     public interface IMessageProcessor<T>
     {
-        void Process(T[] message);
+        void Process(IEnumerable<ConsumerEvent<T>> events);
     }
 }

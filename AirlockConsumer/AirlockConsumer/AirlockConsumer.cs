@@ -12,6 +12,13 @@ using Vostok.Logging;
 
 namespace AirlockConsumer
 {
+    public class ConsumerEvent<T>
+    {
+        public T Event { get; set; }
+        public long Timestamp { get; set; }
+        public string Project { get; set; }
+    }
+
     public class AirlockConsumer<T> : IDisposable
     {
         private readonly int batchSize;
@@ -19,7 +26,7 @@ namespace AirlockConsumer
         private readonly ILog log;
         private readonly Consumer<byte[], T> consumer;
         private readonly CancellationTokenSource cancellationTokenSource;
-        private readonly List<T> events = new List<T>();
+        private readonly List<ConsumerEvent<T>> events = new List<ConsumerEvent<T>>();
 
         public bool IsAssigned { get; set; }
 
@@ -39,7 +46,7 @@ namespace AirlockConsumer
             //var settings = kafkaSetting.Select(x => new KeyValuePair<string, object>(x.Key, x.Value));
             var consumerDeserializer = new ConsumerDeserializer<T>(deserializer);
             consumer = new Consumer<byte[], T>(settings, new ByteArrayDeserializer(), consumerDeserializer);
-            consumer.OnMessage += (s, e) => OnMessage(e.Value);
+            consumer.OnMessage += (s, e) => OnMessage(e);
             consumer.OnError += (s, e) =>
             {
                 log.Error(e.Reason);
@@ -87,11 +94,21 @@ namespace AirlockConsumer
             cancellationTokenSource.Cancel();
         }
 
-        private void OnMessage(T data)
+        private void OnMessage(Message<byte[], T> message)
         {
             lock (this)
             {
-                events.Add(data);
+                var topic = message.Topic;
+                log.Debug($"Got message, topic: '{topic}', ts: '{message.Timestamp.UtcDateTime:O}'");
+                var dashPos = topic.LastIndexOf("-", StringComparison.Ordinal);
+                var project = topic;
+                if (dashPos > 0)
+                    project = topic.Substring(0, dashPos);
+                else
+                {
+                    log.Error("Invalid topic name: '" + topic + "'");
+                }
+                events.Add(new ConsumerEvent<T> { Event = message.Value, Timestamp = message.Timestamp.UnixTimestampMs, Project = project });
                 if (events.Count >= batchSize)
                 {
                     ProcessEvents();

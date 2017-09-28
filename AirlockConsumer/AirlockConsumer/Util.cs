@@ -10,6 +10,14 @@ namespace AirlockConsumer
 {
     public static class Util
     {
+        public static T ReadYamlSettings<T>(string fileName)
+        {
+            var filePath = PatchFilename(Path.Combine("settings", fileName));
+            var input = new StringReader(File.ReadAllText(filePath));
+            var deserializer = new DeserializerBuilder().WithNamingConvention(new PascalCaseNamingConvention()).Build();
+            return deserializer.Deserialize<T>(input);
+        }
+
         public static string AssemblyDirectory
         {
             get
@@ -48,18 +56,10 @@ namespace AirlockConsumer
             }
             return filename;
         }
-        public static string GetBinDirectory([NotNull] this AppDomain domain)
+
+        private static string GetBinDirectory([NotNull] this AppDomain domain)
         {
             return string.IsNullOrEmpty(domain.RelativeSearchPath) ? domain.BaseDirectory : domain.RelativeSearchPath;
-            //return domain.BaseDirectory;
-        }
-
-        public static T ReadYamlSettings<T>(string fileName)
-        {
-            var filePath = Util.PatchFilename(Path.Combine("settings", fileName));
-            var input = new StringReader(File.ReadAllText(filePath));
-            var deserializer = new DeserializerBuilder().WithNamingConvention(new PascalCaseNamingConvention()).Build();
-            return deserializer.Deserialize<T>(input);
         }
     }
 }

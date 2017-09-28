@@ -7,11 +7,11 @@ using Xunit.Abstractions;
 
 namespace AirlockConsumerTest
 {
-    public class Settings_Tests
+    public class SettingsTests
     {
         private readonly ITestOutputHelper output;
 
-        public Settings_Tests(ITestOutputHelper output)
+        public SettingsTests(ITestOutputHelper output)
         {
             this.output = output;
         }
