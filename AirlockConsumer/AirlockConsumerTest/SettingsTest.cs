@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using AirlockConsumer;
+using AirlockLogConsumer;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -17,11 +18,18 @@ namespace AirlockConsumerTest
         }
 
         [Fact]
-        public void Read()
+        public void ReadKafkaSettings()
         {
             var settings = Util.ReadYamlSettings<Dictionary<string, object>>("kafka.yaml");
             Assert.True(settings.ContainsKey("fetch.wait.max.ms"));
             Assert.Equal("1000", settings["fetch.wait.max.ms"]);
+        }
+
+        [Fact]
+        public void ReadLogEventSettings()
+        {
+            var settings = Util.ReadYamlSettings<AirlockLogEventSettings>("logConsumer.yaml");
+            Assert.Equal(1000, settings.BatchSize);
         }
     }
 }

@@ -4,6 +4,7 @@ using System.IO;
 using Elasticsearch.Net;
 using Xunit;
 using Xunit.Abstractions;
+using Xunit.Sdk;
 
 namespace AirlockConsumerTest
 {
@@ -16,7 +17,7 @@ namespace AirlockConsumerTest
             this.output = output;
         }
 
-        [Fact]
+        [Fact(Skip = "Manual test")]
         public void IndexData()
         {
             var settings = new ConnectionConfiguration(new Uri("http://devops-consul1.dev.kontur.ru:9200/"))
@@ -39,9 +40,6 @@ namespace AirlockConsumerTest
                 new { index = new { _index = ".kibana", _type = "LogEvent"} }, obj2
             }));
             output.WriteLine($"code = {response.HttpStatusCode}, {response.ServerError?.Error?.Reason }");
-
-            //File.WriteAllBytes(@"d:\downloads\resp.txt", response.Body); 
-            //client.Index<byte[]>(".kibana", "LogEvent", new PostData<object>(obj));
         }
     }
 }

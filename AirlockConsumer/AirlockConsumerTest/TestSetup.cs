@@ -37,16 +37,5 @@ namespace AirlockConsumerTest
                 .Do(info => new TestOutputLog(outputHelper).Log(info.Arg<LogEvent>()));
             return logMock;
         }
-
-        private static Lazy<ILog> log = new Lazy<ILog>(() =>
-        {
-            var logger = new LoggerConfiguration()
-                .WriteTo.Console()
-                .CreateLogger();
-
-            return new SerilogLog(logger);
-        });
-
-        public static ILog Log => log.Value;
     }
 }

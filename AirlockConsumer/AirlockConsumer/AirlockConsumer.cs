@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -28,9 +27,7 @@ namespace AirlockConsumer
         private readonly CancellationTokenSource cancellationTokenSource;
         private readonly List<ConsumerEvent<T>> events = new List<ConsumerEvent<T>>();
 
-        public bool IsAssigned { get; set; }
-
-        public AirlockConsumer(int eventType, int batchSize, IAirlockDeserializer<T> deserializer, IMessageProcessor<T> messageProcessor, ILog log, string settingsFileName = null)
+        protected AirlockConsumer(int eventType, int batchSize, IAirlockDeserializer<T> deserializer, IMessageProcessor<T> messageProcessor, ILog log, string settingsFileName = null)
         {
             this.batchSize = batchSize;
             this.messageProcessor = messageProcessor;
@@ -59,13 +56,11 @@ namespace AirlockConsumer
             {
                 log.Info($"Assigned partitions: [{string.Join(", ", e)}], member id: {consumer.MemberId}");
                 consumer.Assign(e.Select(x => new TopicPartitionOffset(x, Offset.Beginning)));
-                IsAssigned = true;
             };
             consumer.OnPartitionsRevoked += (_, e) =>
             {
                 log.Info($"Revoked partitions: [{string.Join(", ", e)}]");
                 consumer.Unassign();
-                IsAssigned = false;
             };
             cancellationTokenSource = new CancellationTokenSource();
 
@@ -101,12 +96,13 @@ namespace AirlockConsumer
                 var topic = message.Topic;
                 log.Debug($"Got message, topic: '{topic}', ts: '{message.Timestamp.UtcDateTime:O}'");
                 var dashPos = topic.LastIndexOf("-", StringComparison.Ordinal);
-                var project = topic;
+                string project;
                 if (dashPos > 0)
                     project = topic.Substring(0, dashPos);
                 else
                 {
                     log.Error("Invalid topic name: '" + topic + "'");
+                    return;
                 }
                 events.Add(new ConsumerEvent<T> { Event = message.Value, Timestamp = message.Timestamp.UnixTimestampMs, Project = project });
                 if (events.Count >= batchSize)

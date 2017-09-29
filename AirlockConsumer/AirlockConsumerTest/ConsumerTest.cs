@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -42,7 +41,7 @@ namespace AirlockConsumerTest
             this.output = output;
         }
 
-        [Fact]
+        [Fact(Skip = "Integration test")]
         public void SendAndReceive()
         {
             var logEventData = SendData();
@@ -57,8 +56,8 @@ namespace AirlockConsumerTest
             }
         }
 
-        [Fact]
-        public LogEventData SendData()
+        //[Fact(Skip = "Integration test")]
+        private LogEventData SendData()
         {
             var logEventData = new LogEventData
             {
@@ -112,7 +111,7 @@ namespace AirlockConsumerTest
             }
         }
 
-        public static byte[] SerializeForAirlock<T, TSer>(T obj)
+        private static byte[] SerializeForAirlock<T, TSer>(T obj)
             where TSer : IAirlockSerializer<T>, new()
         {
             var airlockSerializer = new TSer();

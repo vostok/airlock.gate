@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AirlockConsumer\AirlockConsumer.csproj" />
+    <ProjectReference Include="..\AirlockLogConsumer\AirlockLogConsumer.csproj" />
   </ItemGroup>
 
 </Project>

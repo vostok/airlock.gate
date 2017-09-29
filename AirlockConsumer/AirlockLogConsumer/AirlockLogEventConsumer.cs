@@ -15,7 +15,7 @@ namespace AirlockLogConsumer
         private readonly ElasticLowLevelClient elasticClient;
         private readonly ILog log;
 
-        public LogEventMessageProcessor(string[] elasticUriList)
+        public LogEventMessageProcessor(IEnumerable<string> elasticUriList)
         {
             log = Program.Log.With(this);
             var connectionPool = new StickyConnectionPool(elasticUriList.Select(x => new Uri(x)), null);
@@ -26,24 +26,17 @@ namespace AirlockLogConsumer
         {
             log.Info("Process events");
             var elasticRecords = new List<object>();
-            IDictionary<string, string> obj = new Dictionary<string, string>
-            {
-                ["timestamp"] = DateTimeOffset.UtcNow.ToString("O"),
-                ["message"] = "Hello world"
-            };
             foreach (var consumerEvent in events)
             {
                 elasticRecords.Add(new { index = new
                 {
                     _index = ".kibana",
-                    //_index = consumerEvent.Project,
                     _type = "LogEvent"
                 } });
                 var logEventData = consumerEvent.Event;
                 logEventData.Properties["@timestamp"] = DateTimeOffset.FromUnixTimeMilliseconds(consumerEvent.Timestamp).ToString("O");
                 log.Debug("LogEvent: " + string.Join(", ", logEventData.Properties.Select(x => $"{x.Key} : {x.Value}")));
                 elasticRecords.Add(logEventData.Properties);
-                //elasticRecords.Add(obj);
             }
             log.Info($"Send {elasticRecords.Count/2} events");
             var response = elasticClient.Bulk<byte[]>(new PostData<object>(elasticRecords));

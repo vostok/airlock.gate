@@ -1,8 +1,6 @@
 using System;
 using System.IO;
-using System.Reflection;
 using JetBrains.Annotations;
-using YamlDotNet.Core.Tokens;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -16,17 +14,6 @@ namespace AirlockConsumer
             var input = new StringReader(File.ReadAllText(filePath));
             var deserializer = new DeserializerBuilder().WithNamingConvention(new PascalCaseNamingConvention()).Build();
             return deserializer.Deserialize<T>(input);
-        }
-
-        public static string AssemblyDirectory
-        {
-            get
-            {
-                var codeBase = Assembly.GetExecutingAssembly().CodeBase;
-                var uri = new UriBuilder(codeBase);
-                var path = Uri.UnescapeDataString(uri.Path);
-                return Path.GetDirectoryName(path);
-            }
         }
 
         [NotNull]
