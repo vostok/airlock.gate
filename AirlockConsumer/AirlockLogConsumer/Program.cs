@@ -22,6 +22,7 @@ namespace AirlockLogConsumer
             var consumer = new AirlockLogEventConsumer(settings);
             consumer.Start();
             Console.ReadLine();
+            consumer.Stop();
         }
     }
 }
