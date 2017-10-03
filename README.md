@@ -11,11 +11,11 @@ Three main event types:
 1. Add settings files to /etc/kontur/airlock-gate (linux) or c:\ProgramData\kontur\airlock-gate (windows), see samples at ./airlockgate/src/main/resources. If settings file is not found then it will be loaded from resources.    
 2. run command: `make run-java-gate`
 
-Settings file | description
---------| -----
-apikeys.properties | Key-value list. Key is api key. Value is project name (used for topic name)
-app.properties | application settings
-log4j.properties | logging settings
+Settings file       | description
+--------------------| -----------
+apikeys.properties  | Key-value list. Key is api key. Value is comma-separated routing keys with wilcards (*) which are used for authorization
+app.properties      | application settings
+log4j.properties    | logging settings
 producer.properties | kafka settings, see https://github.com/edenhill/librdkafka/blob/master/CONFIGURATION.md
 
 ## Api methods
@@ -64,18 +64,17 @@ Object N           |       | *
 Description          | Type   | Size (bytes)
 ---------------------|--------|------
 Event Type           | string | *
+Event Routing Key    | string | *
 List of EventRecords | list   | *
 
 ### EventRecord
-Description              | Type  | Size (bytes)
--------------------------|-------|------
-Timestamp (milliseconds) | long  | 8
-Data                     | byte array| *
+Description                   | Type       | Size (bytes)
+------------------------------|------------|------
+Unix Timestamp (milliseconds) | long       | 8
+Data                          | byte array | *
 
 ### Byte array
 Description        | Type  | Size (bytes)
 -------------------|-------|------
 Size of array      | int   | 4
 Bytes              | byte[]| n (size of array)
-
-
