@@ -3,7 +3,6 @@ import org.junit.Test;
 import ru.kontur.airlock.Authorizer;
 import ru.kontur.airlock.AuthorizerFactory;
 
-import java.util.Arrays;
 import java.util.HashMap;
 
 public class AuthorizationTest {
@@ -11,10 +10,12 @@ public class AuthorizationTest {
 
     public AuthorizationTest() {
 
-        authorizerFactory = new AuthorizerFactory(new HashMap<String, String[]>(){
-            {put("ExactPatternApiKey", new String[]{"project:env"});}
-            {put("WildcardPatternApiKey", new String[]{"project:env:*"});}
-            {put("SeveralPatternsApiKey", new String[]{"project:dev", "project:staging"});}
+        authorizerFactory = new AuthorizerFactory(new HashMap<String, String[]>() {
+            {
+                put("ExactPatternApiKey", new String[]{"project:env"});
+                put("WildcardPatternApiKey", new String[]{"project:env:*"});
+                put("SeveralPatternsApiKey", new String[]{"project:dev", "project:staging"});
+            }
         });
     }
 
@@ -29,15 +30,16 @@ public class AuthorizationTest {
         Authorizer authorizer = authorizerFactory.getAuthorizer("ExactPatternApiKey");
         Assert.assertEquals(true, authorizer.authorize("project:env"));
         Assert.assertEquals(false, authorizer.authorize("project:env:whatever"));
+        Assert.assertEquals(false, authorizer.authorize("whatever:project:env"));
     }
 
     @Test
     public void WildcardPattern() throws Exception {
         Authorizer authorizer = authorizerFactory.getAuthorizer("WildcardPatternApiKey");
         Assert.assertEquals(true, authorizer.authorize("project:env:whatever"));
+        Assert.assertEquals(false, authorizer.authorize("project:envwhatever"));
         Assert.assertEquals(false, authorizer.authorize("whatever:project:env"));
         Assert.assertEquals(false, authorizer.authorize("project:whatever:env"));
-        Assert.assertEquals(false, authorizer.authorize("project:envwhatever"));
     }
 
     @Test

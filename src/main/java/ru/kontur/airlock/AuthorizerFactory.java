@@ -13,7 +13,7 @@ public class AuthorizerFactory {
             String[] routingKeyPatterns = apiKeysToRoutingKeyPatterns.get(key);
             ArrayList<Pattern> patterns = new ArrayList<>();
             for (String routingKeyPattern : routingKeyPatterns) {
-                Pattern pattern = Pattern.compile("^" + routingKeyPattern.trim().replace("*", ".*") + "$", Pattern.CASE_INSENSITIVE);
+                Pattern pattern = Pattern.compile(routingKeyPattern.trim().replace("*", ".*"), Pattern.CASE_INSENSITIVE);
                 patterns.add(pattern);
             }
             apiKeysToPatterns.put(key, patterns);
