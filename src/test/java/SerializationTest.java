@@ -31,7 +31,6 @@ public class SerializationTest {
         AirlockMessage message = getAirlockMessage(1,100,eventSize);
         byte[] body = message.toByteArray();
         FileOutputStream fos = new FileOutputStream("ammo" + eventSize);
-        //s.getBytes(StandardCharsets.UTF_8)
         byte[] headers =
             ("POST /send HTTP/1.0\r\n" +
             "Content-Length: "+ body.length +"\r\n" +
@@ -50,19 +49,12 @@ public class SerializationTest {
     }
 
     public static AirlockMessage getAirlockMessage(int eventTypeCount, int eventRecordCount, int eventSize) {
-//        EventRecord event = new EventRecord();
-//        event.timestamp = System.currentTimeMillis();
-//        event.data = new byte[10];
-//        for (int k = 0; k < 10; k++) {
-//            event.data[k] = (byte)((k) % 256);
-//        }
-        //TestObj(event, EventRecord.class);
-
         long ts = System.currentTimeMillis();
         AirlockMessage message = new AirlockMessage();
         for (int i = 1; i <= eventTypeCount; i++) {
             EventGroup eventGroup = new EventGroup();
-            eventGroup.eventType = Integer.toString(i);
+            eventGroup.eventType = "type-" + Integer.toString(i);
+            eventGroup.eventRoutingKey = "routing-key-" + Integer.toString(i);
             eventGroup.eventRecords = new ArrayList<>();
             for (int j = 0; j < eventRecordCount; j++) {
                 EventRecord eventRecord = new EventRecord();
@@ -71,10 +63,8 @@ public class SerializationTest {
                 for (int k = 0; k < eventSize; k++) {
                     eventRecord.data[k] = (byte)((i+j+k) % 256);
                 }
-                //TestObj(eventRecord, EventRecord.class);
                 eventGroup.eventRecords.add(eventRecord);
             }
-            //TestObj(eventGroup, EventGroup.class);
             message.eventGroups.add(eventGroup);
         }
         return message;

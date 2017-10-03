@@ -9,17 +9,20 @@ import java.util.List;
 public class EventGroup extends BinarySerializable
 {
     public String eventType;
+    public String eventRoutingKey;
     public List<EventRecord> eventRecords = new ArrayList<>();
 
     @Override
     public void write(OutputStream stream) throws IOException {
         SerializationHelper.writeString(stream, eventType);
+        SerializationHelper.writeString(stream, eventRoutingKey);
         SerializationHelper.writeList(stream, eventRecords);
     }
 
     @Override
     public void read(InputStream stream) throws IOException {
         eventType = SerializationHelper.readString(stream);
+        eventRoutingKey = SerializationHelper.readString(stream);
         eventRecords = SerializationHelper.readList(stream, EventRecord.class);
     }
 }
