@@ -61,10 +61,10 @@ Object 1           |       | *
 Object N           |       | *
 
 ### EventGroup
-Description          | Type  | Size (bytes)
----------------------|-------|------
-Event Type           | short | 4
-List of EventRecords | list  | *
+Description          | Type   | Size (bytes)
+---------------------|--------|------
+Event Type           | string | *
+List of EventRecords | list   | *
 
 ### EventRecord
 Description              | Type  | Size (bytes)
