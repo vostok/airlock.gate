@@ -8,18 +8,18 @@ import java.util.List;
 
 public class EventGroup extends BinarySerializable
 {
-    public short eventType;
+    public String eventType;
     public List<EventRecord> eventRecords = new ArrayList<>();
 
     @Override
     public void write(OutputStream stream) throws IOException {
-        SerializationHelper.writeShort(stream, eventType);
+        SerializationHelper.writeString(stream, eventType);
         SerializationHelper.writeList(stream, eventRecords);
     }
 
     @Override
     public void read(InputStream stream) throws IOException {
-        eventType = SerializationHelper.readShort(stream);
+        eventType = SerializationHelper.readString(stream);
         eventRecords = SerializationHelper.readList(stream, EventRecord.class);
     }
 }

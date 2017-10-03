@@ -62,7 +62,7 @@ public class SerializationTest {
         AirlockMessage message = new AirlockMessage();
         for (int i = 1; i <= eventTypeCount; i++) {
             EventGroup eventGroup = new EventGroup();
-            eventGroup.eventType = (short)(i);
+            eventGroup.eventType = Integer.toString(i);
             eventGroup.eventRecords = new ArrayList<>();
             for (int j = 0; j < eventRecordCount; j++) {
                 EventRecord eventRecord = new EventRecord();
