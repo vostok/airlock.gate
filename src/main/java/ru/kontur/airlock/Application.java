@@ -7,6 +7,8 @@ import org.rapidoid.net.Server;
 
 import java.io.*;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 public class Application {
@@ -18,20 +20,12 @@ public class Application {
 
             final JmxReporter reporter = JmxReporter.forRegistry(metricRegistry).build();
             reporter.start();
-
-//        final ConsoleReporter consoleReporter = ConsoleReporter.forRegistry(metricRegistry)
-//                .convertRatesTo(TimeUnit.SECONDS)
-//                .convertDurationsTo(TimeUnit.MILLISECONDS)
-//                .build();
-//        consoleReporter.start(1, TimeUnit.SECONDS);
     }
 
     public static void main(String[] args) throws Exception {
-        //((ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger("org.apache.kafka")).setLevel(Level.INFO);
         run();
         Runtime.getRuntime().addShutdownHook(new Thread(Application::shutdown));
         new BufferedReader(new InputStreamReader(System.in)).readLine();
-        //shutdown();
     }
 
     public static void run() {
@@ -43,11 +37,21 @@ public class Application {
             Properties producerProps = getProperties("producer.properties");
             Properties appProperties = getProperties("app.properties");
             int port = Integer.parseInt(appProperties.getProperty("port", "8888"));
-            httpServer = new HttpServer(new EventSender(producerProps)).listen(port);
+            httpServer = new HttpServer(new EventSender(producerProps), getAuthorizerFactory()).listen(port);
             Log.info("Server started");
         } catch (Exception ex) {
             logEx(ex);
         }
+    }
+
+    private static AuthorizerFactory getAuthorizerFactory() throws IOException {
+        Properties apiKeysProps = Application.getProperties("apikeys.properties");
+        Map<String, String[]> apiKeysToRoutingKeyPatterns = new HashMap<>();
+        for (String key : apiKeysProps.stringPropertyNames()) {
+            String[] routingKeyPatterns = apiKeysProps.getProperty(key, "").trim().split("\\s*,\\s*");
+            apiKeysToRoutingKeyPatterns.put(key, routingKeyPatterns);
+        }
+        return new AuthorizerFactory(apiKeysToRoutingKeyPatterns);
     }
 
     static void logEx(Throwable e) {

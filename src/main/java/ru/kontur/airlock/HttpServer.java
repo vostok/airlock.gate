@@ -13,15 +13,10 @@ import ru.kontur.airlock.dto.AirlockMessage;
 import ru.kontur.airlock.dto.EventGroup;
 
 import java.io.IOException;
-import java.nio.file.FileSystems;
-import java.nio.file.PathMatcher;
-import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
 
 import static com.codahale.metrics.MetricRegistry.name;
+
 
 public class HttpServer extends AbstractHttpServer {
     private static final byte[] URI_PING = "/ping".getBytes();
@@ -29,20 +24,16 @@ public class HttpServer extends AbstractHttpServer {
     private static final byte[] URI_TH = "/th".getBytes();
     private static final byte[] URI_THKB = "/thkb".getBytes();
     private final EventSender eventSender;
-    private final Map<String, String[]> apiKeysToRoutingKeyPatterns = new HashMap<>();
+    private final AuthorizerFactory authorizerFactory;
     private final Meter requestSizeMeter = Application.metricRegistry.meter(name(HttpServer.class, "request-size"));
     private final Meter eventMeter = Application.metricRegistry.meter(name(HttpServer.class, "events"));
     private final Timer requests = Application.metricRegistry.timer(name(HttpServer.class, "requests"));
     private final MetricsReporter metricsReporter;
 
-    public HttpServer(EventSender eventSender) throws IOException {
+    public HttpServer(EventSender eventSender, AuthorizerFactory authorizerFactory) throws IOException {
         this.eventSender = eventSender;
+        this.authorizerFactory = authorizerFactory;
         metricsReporter = new MetricsReporter(3, eventMeter, requestSizeMeter);
-        Properties apiKeysProps = Application.getProperties("apikeys.properties");
-        for (String key : apiKeysProps.stringPropertyNames()) {
-            String[] routingKeyPatterns = apiKeysProps.getProperty(key, "").trim().split("\\s*,\\s*");
-            apiKeysToRoutingKeyPatterns.put(key, routingKeyPatterns);
-        }
     }
 
     @Override
@@ -101,23 +92,14 @@ public class HttpServer extends AbstractHttpServer {
     }
 
     private ArrayList<EventGroup> filterEventGroupsForApiKey(String apiKey, AirlockMessage message) {
-        String[] allowedRoutingKeyPatterns = apiKeysToRoutingKeyPatterns.get(apiKey);
         ArrayList<EventGroup> authorizedEventGroups = new ArrayList<>();
+        Authorizer authorizer = authorizerFactory.getAuthorizer(apiKey);
         for (EventGroup eventGroup : message.eventGroups) {
-            if (routingKeyMatchesAnyPattern(eventGroup.eventRoutingKey, allowedRoutingKeyPatterns)) {
+            if (authorizer.authorize(eventGroup.eventRoutingKey)) {
                 authorizedEventGroups.add(eventGroup);
             }
         }
         return authorizedEventGroups;
-    }
-
-    private boolean routingKeyMatchesAnyPattern(String eventRoutingKey, String[] allowedRoutingKeyPatterns) {
-        for (String pattern : allowedRoutingKeyPatterns) {
-            PathMatcher pathMatcher = FileSystems.getDefault().getPathMatcher(pattern);
-            if(pathMatcher.matches(Paths.get(eventRoutingKey)))
-                return true;
-        }
-        return false;
     }
 
     private String getHeader(Buf buf, RapidoidHelper req, String name) {
