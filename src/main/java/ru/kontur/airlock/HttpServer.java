@@ -58,7 +58,7 @@ public class HttpServer extends AbstractHttpServer {
     private HttpStatus send(Channel ctx, Buf buf, RapidoidHelper req, boolean isKeepAlive) {
         final Timer.Context timerContext = requests.time();
         try {
-            String apiKey = getHeader(buf, req, "apikey");
+            String apiKey = getHeader(buf, req, "x-apikey");
             if (apiKey == null || apiKey.trim().isEmpty())
                 return error(ctx, isKeepAlive, "Apikey is not provided", 401);
 
