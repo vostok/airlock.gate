@@ -3,13 +3,8 @@ jdk:
 - oraclejdk8
 cache: false
 sudo: true
-
-before_install:
-  - make prepare_for_travis
-install:
-  - make build
 script:
-  - make packages
+  - make travis-build-packages
 before_deploy:
   - export RELEASE_PKG_TAR=$(ls build/vostok-airlock-gate*.tar.gz)
   - export RELEASE_PKG_RPM=$(ls build/vostok-airlock-gate*.rpm)

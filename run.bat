@@ -1,1 +1,0 @@
-java -Xms16g -Xmx16g -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -jar ./target/vostok-airlock-gate-1.0-SNAPSHOT.jar

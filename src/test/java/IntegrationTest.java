@@ -15,17 +15,15 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Ignore
-public class SendingTest {
-
+public class IntegrationTest {
     @Test
     public void sendManyRequests() throws Exception {
         Application.run();
         for (int i = 0; i < 1000000; i++) {
-            AirlockMessage airlockMessage = SerializationTest.getAirlockMessage();
+            AirlockMessage airlockMessage = AirlockMessageGenerator.generateAirlockMessage();
             Request request = Request.Post("http://localhost:8888/send")
                     .connectTimeout(1000)
                     .socketTimeout(1000)
-                    //.addHeader("apikey", "8bb9d519-ae52-4c17-ad7a-d871dbd665fe")
                     .bodyByteArray(airlockMessage.toByteArray());
             HttpResponse response = request.addHeader("apikey", "8bb9d519-ae52-4c17-ad7a-d871dbd665fe").execute().returnResponse();
             Assert.assertEquals(200, response.getStatusLine().getStatusCode());
@@ -39,7 +37,7 @@ public class SendingTest {
         consumer.subscribe(Collections.singletonList("extern-1"), new GoBackOnRebalance(consumer, 40));
         consumer.poll(0);
 
-        AirlockMessage airlockMessage = SerializationTest.getAirlockMessage();
+        AirlockMessage airlockMessage = AirlockMessageGenerator.generateAirlockMessage();
         List<EventRecord> eventRecords = airlockMessage.eventGroups.get(0).eventRecords;
 //        for (int i = 0; i < 100000; i++) {
 //            EventRecord rec = new EventRecord();
@@ -54,7 +52,6 @@ public class SendingTest {
         Request request = Request.Post("http://localhost:8888/send")
                 .connectTimeout(1000)
                 .socketTimeout(1000)
-                //.addHeader("apikey", "8bb9d519-ae52-4c17-ad7a-d871dbd665fe")
                 .bodyByteArray(airlockMessage.toByteArray());
         HttpResponse response = request.execute().returnResponse();
         Assert.assertEquals(401, response.getStatusLine().getStatusCode());
