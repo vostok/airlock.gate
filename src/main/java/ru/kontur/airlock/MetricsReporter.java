@@ -8,14 +8,14 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class MetricsReporter {
+class MetricsReporter {
     private double lastThroughput = 0;
     private long lastThroughputBytes = 0;
 
     private long lastEventCount = 0;
     private long lastRequestSizeCount = 0;
 
-    public MetricsReporter(int reportingIntervalSeconds, Meter eventMeter, Meter requestSizeMeter) {
+    MetricsReporter(int reportingIntervalSeconds, Meter eventMeter, Meter requestSizeMeter) {
         ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
         executor.scheduleAtFixedRate(() -> {
             synchronized (this) {
@@ -30,11 +30,11 @@ public class MetricsReporter {
         }, 0, reportingIntervalSeconds, TimeUnit.SECONDS);
     }
 
-    public String getLastThroughput() {
+    String getLastThroughput() {
         return new DecimalFormat("#.##").format(lastThroughput);
     }
 
-    public String getLastThroughputKb() {
-        return new DecimalFormat("#.##").format(lastThroughputBytes / 1024 );
+    String getLastThroughputKb() {
+        return new DecimalFormat("#.##").format(lastThroughputBytes / 1024);
     }
 }

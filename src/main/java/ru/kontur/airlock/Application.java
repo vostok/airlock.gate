@@ -12,14 +12,12 @@ import java.util.Map;
 import java.util.Properties;
 
 public class Application {
-
     private static Server httpServer;
     static final MetricRegistry metricRegistry = new MetricRegistry();
 
     private static void initMetrics() {
-
-            final JmxReporter reporter = JmxReporter.forRegistry(metricRegistry).build();
-            reporter.start();
+        final JmxReporter reporter = JmxReporter.forRegistry(metricRegistry).build();
+        reporter.start();
     }
 
     public static void main(String[] args) throws Exception {
@@ -54,7 +52,7 @@ public class Application {
         return new AuthorizerFactory(apiKeysToRoutingKeyPatterns);
     }
 
-    static void logEx(Throwable e) {
+    private static void logEx(Throwable e) {
         StringWriter sw = new StringWriter();
         e.printStackTrace(new PrintWriter(sw));
         Log.error(sw.toString());
@@ -73,7 +71,7 @@ public class Application {
                 Application.class.getClassLoader().getResourceAsStream(configName);
     }
 
-    static Properties getProperties(String configName) throws IOException {
+    private static Properties getProperties(String configName) throws IOException {
         Properties properties = new Properties();
         InputStream configStream = getConfigStream(configName);
         properties.load(configStream);

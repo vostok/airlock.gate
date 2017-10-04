@@ -3,7 +3,7 @@ package ru.kontur.airlock;
 public class Authorizer {
     private final String[] allowedRoutingKeyPatterns;
 
-    public Authorizer(String[] allowedRoutingKeyPatterns) {
+    Authorizer(String[] allowedRoutingKeyPatterns) {
         this.allowedRoutingKeyPatterns = allowedRoutingKeyPatterns;
     }
 

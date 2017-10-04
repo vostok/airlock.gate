@@ -36,7 +36,7 @@ public class SendingTest {
     @Test
     public void sendAndReceiveData() throws Exception {
         KafkaConsumer<byte[], byte[]> consumer = createConsumer();
-        consumer.subscribe(Arrays.asList("extern-1"), new GoBackOnRebalance(consumer, 40));
+        consumer.subscribe(Collections.singletonList("extern-1"), new GoBackOnRebalance(consumer, 40));
         consumer.poll(0);
 
         AirlockMessage airlockMessage = SerializationTest.getAirlockMessage();
@@ -92,22 +92,22 @@ public class SendingTest {
         props.put("fetch.min.bytes", 1);
         props.put("fetch.max.bytes", 52428800);
         props.put("fetch.max.wait.ms", 500);
-        props.put("key.deserializer","org.apache.kafka.common.serialization.ByteArrayDeserializer");
-        props.put("value.deserializer","org.apache.kafka.common.serialization.ByteArrayDeserializer");
-        return new KafkaConsumer<byte[],byte[]>(props);
+        props.put("key.deserializer", "org.apache.kafka.common.serialization.ByteArrayDeserializer");
+        props.put("value.deserializer", "org.apache.kafka.common.serialization.ByteArrayDeserializer");
+        return new KafkaConsumer<>(props);
     }
 
     public class GoBackOnRebalance implements ConsumerRebalanceListener {
         private final int seconds;
         private Consumer<?, ?> consumer;
 
-        public GoBackOnRebalance(Consumer<?, ?> consumer, int seconds) {
+        GoBackOnRebalance(Consumer<?, ?> consumer, int seconds) {
             this.consumer = consumer;
             this.seconds = seconds;
         }
 
         public void onPartitionsRevoked(Collection<TopicPartition> partitions) {
-            Log.info("Revoke " + String.join(",", partitions.stream().map(x -> x.toString()).collect(Collectors.toList())));
+            Log.info("Revoke " + String.join(",", partitions.stream().map(TopicPartition::toString).collect(Collectors.toList())));
         }
 
         public void onPartitionsAssigned(Collection<TopicPartition> partitions) {
@@ -121,7 +121,7 @@ public class SendingTest {
                     offset = offsetAndTimestamp.offset();
                     Log.info("Rewind consumer for " + topicPartition + " to " + offsetAndTimestamp);
                 } else {
-                    offset = consumer.endOffsets(Arrays.asList(topicPartition)).get(topicPartition);
+                    offset = consumer.endOffsets(Collections.singletonList(topicPartition)).get(topicPartition);
                     Log.info("Rewind consumer for " + topicPartition + " to the end");
                 }
                 consumer.seek(topicPartition, offset);

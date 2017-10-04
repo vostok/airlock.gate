@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AirlockMessage extends BinarySerializable {
-    public static final short version = 1;
+    private static final short version = 1;
     public List<EventGroup> eventGroups = new ArrayList<>();
 
     public void write(OutputStream stream) throws IOException {

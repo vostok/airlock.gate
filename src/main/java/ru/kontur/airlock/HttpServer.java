@@ -30,7 +30,7 @@ public class HttpServer extends AbstractHttpServer {
     private final Timer requests = Application.metricRegistry.timer(name(HttpServer.class, "requests"));
     private final MetricsReporter metricsReporter;
 
-    public HttpServer(EventSender eventSender, AuthorizerFactory authorizerFactory) throws IOException {
+    HttpServer(EventSender eventSender, AuthorizerFactory authorizerFactory) throws IOException {
         this.eventSender = eventSender;
         this.authorizerFactory = authorizerFactory;
         metricsReporter = new MetricsReporter(3, eventMeter, requestSizeMeter);

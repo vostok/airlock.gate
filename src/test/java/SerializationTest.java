@@ -28,15 +28,15 @@ public class SerializationTest {
     }
 
     private void InternalPrepareAmmo(int eventSize) throws IOException {
-        AirlockMessage message = getAirlockMessage(1,100,eventSize);
+        AirlockMessage message = getAirlockMessage(1, 100, eventSize);
         byte[] body = message.toByteArray();
         FileOutputStream fos = new FileOutputStream("ammo" + eventSize);
         byte[] headers =
-            ("POST /send HTTP/1.0\r\n" +
-            "Content-Length: "+ body.length +"\r\n" +
-            "Host: icat-test04:8888\r\n" +
-            "apikey: 8bb9d519-ae52-4c17-ad7a-d871dbd665fe\r\n" +
-                    "\r\n").getBytes(StandardCharsets.US_ASCII);
+                ("POST /send HTTP/1.0\r\n" +
+                        "Content-Length: " + body.length + "\r\n" +
+                        "Host: icat-test04:8888\r\n" +
+                        "apikey: 8bb9d519-ae52-4c17-ad7a-d871dbd665fe\r\n" +
+                        "\r\n").getBytes(StandardCharsets.US_ASCII);
         int requestSize = headers.length + body.length;
         fos.write(("" + requestSize + "\r\n").getBytes(StandardCharsets.US_ASCII));
         fos.write(headers);
@@ -44,11 +44,11 @@ public class SerializationTest {
         fos.close();
     }
 
-    public static AirlockMessage getAirlockMessage() {
-        return getAirlockMessage(3,10,10);
+    static AirlockMessage getAirlockMessage() {
+        return getAirlockMessage(3, 10, 10);
     }
 
-    public static AirlockMessage getAirlockMessage(int eventTypeCount, int eventRecordCount, int eventSize) {
+    private static AirlockMessage getAirlockMessage(int eventTypeCount, int eventRecordCount, int eventSize) {
         long ts = System.currentTimeMillis();
         AirlockMessage message = new AirlockMessage();
         for (int i = 1; i <= eventTypeCount; i++) {
@@ -60,7 +60,7 @@ public class SerializationTest {
                 eventRecord.timestamp = ts++;
                 eventRecord.data = new byte[eventSize];
                 for (int k = 0; k < eventSize; k++) {
-                    eventRecord.data[k] = (byte)((i+j+k) % 256);
+                    eventRecord.data[k] = (byte) ((i + j + k) % 256);
                 }
                 eventGroup.eventRecords.add(eventRecord);
             }
