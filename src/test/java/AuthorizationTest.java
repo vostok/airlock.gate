@@ -14,7 +14,8 @@ public class AuthorizationTest {
             {
                 put("ExactPatternApiKey", new String[]{"project:env"});
                 put("WildcardPatternApiKey", new String[]{"project:env:*"});
-                put("SeveralPatternsApiKey", new String[]{"project:dev", "project:staging"});
+                put("SeveralPatternsApiKey", new String[]{"project:dev", "project:staging", "foo:bar"});
+                put("IgnoringCasePatternsApiKey", new String[]{"Project:Env", "Foo:Bar:*"});
             }
         });
     }
@@ -48,5 +49,17 @@ public class AuthorizationTest {
         Assert.assertEquals(true, authorizer.authorize("project:dev"));
         Assert.assertEquals(true, authorizer.authorize("project:staging"));
         Assert.assertEquals(false, authorizer.authorize("project:prod"));
+        Assert.assertEquals(true, authorizer.authorize("foo:bar"));
+    }
+
+    @Test
+    public void IgnoringCasePatterns() throws Exception {
+        Authorizer authorizer = authorizerFactory.getAuthorizer("IgnoringCasePatternsApiKey");
+        Assert.assertEquals(true, authorizer.authorize("project:env"));
+        Assert.assertEquals(true, authorizer.authorize("project:enV"));
+        Assert.assertEquals(false, authorizer.authorize("project:env2"));
+        Assert.assertEquals(true, authorizer.authorize("foo:bar:dev"));
+        Assert.assertEquals(true, authorizer.authorize("foO:Bar:staging"));
+        Assert.assertEquals(false, authorizer.authorize("_Foo:Bar"));
     }
 }
