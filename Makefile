@@ -15,9 +15,9 @@ DESCRIPTION := "Vostok Airlock Gate"
 NAME := "vostok-airlock-gate"
 
 travis-prepare:
-    sudo apt-get -qq update
-    sudo apt-get install -y rpm ruby-dev gcc make
-    gem install fpm	
+	sudo apt-get -qq update
+	sudo apt-get install -y rpm ruby-dev gcc make
+	gem install fpm
 
 travis-build-packages: travis-prepare build
 	mkdir -p build/root/usr/lib/vostok/airlock
