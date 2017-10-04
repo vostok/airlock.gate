@@ -59,6 +59,13 @@ Description        | Type   | Size (bytes)
 Size of array      | int    | 4
 Bytes              | byte[] | n (size of array)
 
+##### String *(datatype)*
+
+Description        | Type   | Size (bytes)
+-------------------|--------|-------------
+Size of string     | int    | 4
+Bytes (UTF-8)      | byte[] | n (size of string)
+
 ##### AirlockMessage *(root object)*
 
 Description         | Type  | Size (bytes)
@@ -70,7 +77,6 @@ List of EventGroups | list  | *
 
 Description          | Type   | Size (bytes)
 ---------------------|--------|-------------
-Size of routing key  | int    | 4
 Routing key          | string | *
 List of EventRecords | list   | *
 
