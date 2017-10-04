@@ -1,79 +1,81 @@
-# Airlock Gate
-Service for sending application events.
-Three main event types:
+# Airlock Gate [![Build Status](https://travis-ci.org/vostok-project/airlock.svg?branch=master)](https://travis-ci.org/vostok-project/airlock)
 
- - Log events
- - Metric events
- - Tracing events
+A proxy between your Vostok-instrumented applications and Kafka.
 
-## Installation
+## How to run
 
-1. Add settings files to /etc/kontur/airlock-gate (linux) or c:\ProgramData\kontur\airlock-gate (windows), see samples at ./airlockgate/src/main/resources. If settings file is not found then it will be loaded from resources.    
-2. run command: `make run-java-gate`
+Just `make`, if you are on a normal OS. Otherwise, look inside the `Makefile` for correct commands.
 
-Settings file       | description
---------------------| -----------
-apikeys.properties  | Key-value list. Key is api key. Value is comma-separated routing keys with wilcards (*) which are used for authorization
-app.properties      | application settings
-log4j.properties    | logging settings
-producer.properties | kafka settings, see https://github.com/edenhill/librdkafka/blob/master/CONFIGURATION.md
-
-## Api methods
+## API methods
 
 ### Ping
-**Url**: /ping
 
-**Description**: Return 200 http code and that's all
+**Url**: `/ping`
+
+**Method**: `GET`
+
+**Description**: Does nothing. Returns `200 OK`.
 
 ### Send
 
-**Url**: /send
+**Url**: `/send`
 
-**Description**: Send data to message broker
+**Method**: `POST`
 
-**Method**: POST
+**Description**: Relays messages to Kafka.
 
-**Body**: Serialized [Airlock Message](#airlockmessage)
+#### Request headers
 
-**Headers**
+Name   | Type
+-------|-------
+apikey | string
 
-Name        | Type  |
-------------|-------|
-apikey      | string|
+#### Response codes
 
+Code | Meaning
+-----|--------
+200  | Request body format is valid. API key is valid for all provided routing keys. Messages had been put into an internal buffer, but not necessarily into Kafka yet.
+203  | Request body format is valid. API key is valid for some, but not all, provided routing keys. Messages with disallowed routing keys had been dropped.
+400  | Request body is empty, or request body format is invalid.
+403  | Request body format is valid. API key is invalid for all provided routing keys. All messages had been dropped. 
 
-## Message structure
+#### Body
 
-Assume little endian for primitive types.
+Binary-serialized message. Assume little endian for primitive types.
 
-### AirlockMessage
+##### AirlockMessage
+
 Description        | Type  | Size (bytes)
--------------------|-------|------
+-------------------|-------|-------------
 Version            | short | 2
 List of EventGroup | list  | *
 
-### List of objects
-Description        | Type  | Size (bytes)
--------------------|-------|------
-Size of list       | int   | 4
-Object 1           |       | *
-...                |       | *
-Object N           |       | *
+##### List of objects
 
-### EventGroup
+Description  | Type  | Size (bytes)
+-------------|-------|-------------
+Size of list | int   | 4
+Object 1     |       | *
+...          |       | *
+Object N     |       | *
+
+##### EventGroup
+
 Description          | Type   | Size (bytes)
----------------------|--------|------
+---------------------|--------|-------------
 Event Routing Key    | string | *
 List of EventRecords | list   | *
 
-### EventRecord
+##### EventRecord
+
 Description                   | Type       | Size (bytes)
-------------------------------|------------|------
+------------------------------|------------|-------------
 Unix Timestamp (milliseconds) | long       | 8
 Data                          | byte array | *
 
-### Byte array
+##### Byte array
+
 Description        | Type  | Size (bytes)
--------------------|-------|------
+-------------------|-------|-------------
 Size of array      | int   | 4
 Bytes              | byte[]| n (size of array)
