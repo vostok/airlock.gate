@@ -53,7 +53,6 @@ public class SerializationTest {
         AirlockMessage message = new AirlockMessage();
         for (int i = 1; i <= eventTypeCount; i++) {
             EventGroup eventGroup = new EventGroup();
-            eventGroup.eventType = "type-" + Integer.toString(i);
             eventGroup.eventRoutingKey = "routing-key-" + Integer.toString(i);
             eventGroup.eventRecords = new ArrayList<>();
             for (int j = 0; j < eventRecordCount; j++) {

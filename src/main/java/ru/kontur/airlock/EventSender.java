@@ -18,9 +18,8 @@ class EventSender {
     }
 
     void send(EventGroup eventGroup) {
-        String topic = eventGroup.eventRoutingKey + "|" + eventGroup.eventType;
         for (EventRecord record : eventGroup.eventRecords) {
-            kafkaProducer.send(new ProducerRecord<>(topic, null, record.timestamp, null, record.data));
+            kafkaProducer.send(new ProducerRecord<>(eventGroup.eventRoutingKey, null, record.timestamp, null, record.data));
         }
     }
 }
