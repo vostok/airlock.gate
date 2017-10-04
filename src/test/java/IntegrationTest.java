@@ -14,6 +14,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+// TODO this is probably broken
 @Ignore
 public class IntegrationTest {
     @Test

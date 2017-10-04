@@ -43,14 +43,7 @@ Code | Meaning
 
 Binary-serialized message. Assume little endian for primitive types.
 
-##### AirlockMessage
-
-Description        | Type  | Size (bytes)
--------------------|-------|-------------
-Version            | short | 2
-List of EventGroup | list  | *
-
-##### List of objects
+##### List *(datatype)*
 
 Description  | Type  | Size (bytes)
 -------------|-------|-------------
@@ -59,11 +52,26 @@ Object 1     |       | *
 ...          |       | *
 Object N     |       | *
 
+##### Byte array *(datatype)*
+
+Description        | Type   | Size (bytes)
+-------------------|--------|-------------
+Size of array      | int    | 4
+Bytes              | byte[] | n (size of array)
+
+##### AirlockMessage *(root object)*
+
+Description         | Type  | Size (bytes)
+--------------------|-------|-------------
+Version             | short | 2
+List of EventGroups | list  | *
+
 ##### EventGroup
 
 Description          | Type   | Size (bytes)
 ---------------------|--------|-------------
-Event Routing Key    | string | *
+Size of routing key  | int    | 4
+Routing key          | string | *
 List of EventRecords | list   | *
 
 ##### EventRecord
@@ -73,9 +81,3 @@ Description                   | Type       | Size (bytes)
 Unix Timestamp (milliseconds) | long       | 8
 Data                          | byte array | *
 
-##### Byte array
-
-Description        | Type  | Size (bytes)
--------------------|-------|-------------
-Size of array      | int   | 4
-Bytes              | byte[]| n (size of array)
