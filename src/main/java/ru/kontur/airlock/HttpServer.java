@@ -40,8 +40,12 @@ public class HttpServer extends AbstractHttpServer {
     protected HttpStatus handle(Channel ctx, Buf buf, RapidoidHelper req) {
         boolean isKeepAlive = req.isKeepAlive.value;
         if (matches(buf, req.path, URI_PING)) {
+            if (!matches(buf, req.verb, "GET".getBytes()))
+                return error(ctx, isKeepAlive, "Method not allowed", 405);
             return ok(ctx, isKeepAlive, new byte[0], MediaType.TEXT_PLAIN);
         } else if (matches(buf, req.path, URI_SEND)) {
+            if (!matches(buf, req.verb, "POST".getBytes()))
+                return error(ctx, isKeepAlive, "Method not allowed", 405);
             return send(ctx, buf, req, isKeepAlive);
         } else if (matches(buf, req.path, URI_TH)) {
             return ok(ctx, isKeepAlive, metricsReporter.getLastThroughput().getBytes(), MediaType.TEXT_PLAIN);
