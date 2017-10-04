@@ -63,7 +63,6 @@ Object N           |       | *
 ### EventGroup
 Description          | Type   | Size (bytes)
 ---------------------|--------|------
-Event Type           | string | *
 Event Routing Key    | string | *
 List of EventRecords | list   | *
 
