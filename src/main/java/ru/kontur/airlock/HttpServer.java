@@ -25,15 +25,15 @@ public class HttpServer extends AbstractHttpServer {
     private static final byte[] URI_THROUGHPUT_KB = "/thkb".getBytes(); // Yandex.Tank report metrics, not used in production
 
     private final EventSender eventSender;
-    private final AuthorizerFactory authorizerFactory;
+    private final ValidatorFactory validatorFactory;
     private final Meter requestSizeMeter = Application.metricRegistry.meter(name(HttpServer.class, "request-size"));
     private final Meter eventMeter = Application.metricRegistry.meter(name(HttpServer.class, "events"));
     private final Timer requests = Application.metricRegistry.timer(name(HttpServer.class, "requests"));
     private final MetricsReporter metricsReporter;
 
-    HttpServer(EventSender eventSender, AuthorizerFactory authorizerFactory) throws IOException {
+    HttpServer(EventSender eventSender, ValidatorFactory validatorFactory) throws IOException {
         this.eventSender = eventSender;
-        this.authorizerFactory = authorizerFactory;
+        this.validatorFactory = validatorFactory;
         metricsReporter = new MetricsReporter(3, eventMeter, requestSizeMeter);
     }
 
@@ -61,10 +61,10 @@ public class HttpServer extends AbstractHttpServer {
         try {
             String apiKey = getHeader(buf, req, "x-apikey");
             if (apiKey == null || apiKey.trim().isEmpty())
-                return error(ctx, isKeepAlive, "Apikey is not provided", 401);
+                return error(ctx, isKeepAlive, "Apikey is not provided in x-apikey header", 401);
 
             if (req.body == null || req.body.length == 0)
-                return error(ctx, isKeepAlive, "Empty body", 400);
+                return error(ctx, isKeepAlive, "Request body is empty", 400);
             byte[] body = new byte[req.body.length];
             buf.get(req.body, body, 0);
 
@@ -75,20 +75,20 @@ public class HttpServer extends AbstractHttpServer {
                 return error(ctx, isKeepAlive, e.getMessage(), 400);
             }
 
-            ArrayList<EventGroup> authorizedEventGroups = filterEventGroupsForApiKey(apiKey, message);
-            if (authorizedEventGroups.size() == 0)
-                return error(ctx, isKeepAlive, "Access denied", 403);
+            ArrayList<EventGroup> validEventGroups = filterEventGroupsForApiKey(apiKey, message);
+            if (validEventGroups.size() == 0)
+                return error(ctx, isKeepAlive, "Request is valid, but all event groups have routing keys that are either forbidden for this apikey or contain characters other than [A-Za-z0-9.-]", 400);
 
             int eventCount = 0;
-            for (EventGroup eventGroup : authorizedEventGroups) {
+            for (EventGroup eventGroup : validEventGroups) {
                 eventSender.send(eventGroup);
                 eventCount += eventGroup.eventRecords.size();
             }
             eventMeter.mark(eventCount);
             requestSizeMeter.mark(req.body.length);
 
-            if (authorizedEventGroups.size() < message.eventGroups.size())
-                return error(ctx, isKeepAlive, "Access is denied for some event groups", 203);
+            if (validEventGroups.size() < message.eventGroups.size())
+                return error(ctx, isKeepAlive, "Request is valid, but some event groups have routing keys that are either forbidden for this apikey or contain characters other than [A-Za-z0-9.-]", 203);
             else
                 return ok(ctx, isKeepAlive, new byte[0], MediaType.TEXT_PLAIN);
         } finally {
@@ -97,14 +97,14 @@ public class HttpServer extends AbstractHttpServer {
     }
 
     private ArrayList<EventGroup> filterEventGroupsForApiKey(String apiKey, AirlockMessage message) {
-        ArrayList<EventGroup> authorizedEventGroups = new ArrayList<>();
-        Authorizer authorizer = authorizerFactory.getAuthorizer(apiKey);
+        ArrayList<EventGroup> validatedEventGroups = new ArrayList<>();
+        Validator validator = validatorFactory.getValidator(apiKey);
         for (EventGroup eventGroup : message.eventGroups) {
-            if (authorizer.authorize(eventGroup.eventRoutingKey)) {
-                authorizedEventGroups.add(eventGroup);
+            if (validator.validate(eventGroup.eventRoutingKey)) {
+                validatedEventGroups.add(eventGroup);
             }
         }
-        return authorizedEventGroups;
+        return validatedEventGroups;
     }
 
     private String getHeader(Buf buf, RapidoidHelper req, String name) {

@@ -1,13 +1,24 @@
 package ru.kontur.airlock;
 
-public class Authorizer {
-    private final String[] allowedRoutingKeyPatterns;
+import java.util.regex.Pattern;
 
-    Authorizer(String[] allowedRoutingKeyPatterns) {
+public class Validator {
+    private final String[] allowedRoutingKeyPatterns;
+    private final Pattern allowedCharacters = Pattern.compile("[A-Za-z0-9.-]+");
+
+    Validator(String[] allowedRoutingKeyPatterns) {
         this.allowedRoutingKeyPatterns = allowedRoutingKeyPatterns;
     }
 
-    public boolean authorize(String eventRoutingKey) {
+    public boolean validate(String eventRoutingKey) {
+        return validateForbiddenCharacters(eventRoutingKey) && validateApiKeyAccess(eventRoutingKey);
+    }
+
+    private boolean validateForbiddenCharacters(String eventRoutingKey) {
+        return allowedCharacters.matcher(eventRoutingKey).matches();
+    }
+
+    private boolean validateApiKeyAccess(String eventRoutingKey) {
         if (allowedRoutingKeyPatterns != null) {
             for (String pattern : allowedRoutingKeyPatterns) {
                 if (matches(eventRoutingKey, pattern))

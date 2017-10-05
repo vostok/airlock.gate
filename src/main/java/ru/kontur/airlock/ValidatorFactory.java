@@ -3,17 +3,17 @@ package ru.kontur.airlock;
 import java.util.HashMap;
 import java.util.Map;
 
-public class AuthorizerFactory {
+public class ValidatorFactory {
     private final HashMap<String, String[]> apiKeysToPatterns = new HashMap<>();
 
-    public AuthorizerFactory(Map<String, String[]> apiKeysToRoutingKeyPatterns) {
+    public ValidatorFactory(Map<String, String[]> apiKeysToRoutingKeyPatterns) {
         for (String key : apiKeysToRoutingKeyPatterns.keySet()) {
             String[] routingKeyPatterns = apiKeysToRoutingKeyPatterns.get(key);
             apiKeysToPatterns.put(key, routingKeyPatterns);
         }
     }
 
-    public Authorizer getAuthorizer(String apiKey) {
-        return new Authorizer(apiKeysToPatterns.get(apiKey));
+    public Validator getValidator(String apiKey) {
+        return new Validator(apiKeysToPatterns.get(apiKey));
     }
 }

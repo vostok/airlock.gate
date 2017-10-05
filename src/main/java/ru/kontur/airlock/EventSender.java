@@ -48,7 +48,7 @@ class EventSenderCallback implements Callback {
     private final String routingKey;
     private final EventRecord event;
 
-    public EventSenderCallback(String routingKey, EventRecord event) {
+    EventSenderCallback(String routingKey, EventRecord event) {
         this.routingKey = routingKey;
         this.event = event;
     }

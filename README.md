@@ -35,9 +35,8 @@ apikey | string
 Code | Meaning
 -----|--------
 200  | Request body format is valid. API key is valid for all provided routing keys. Messages had been put into an internal buffer, but not necessarily into Kafka yet.
-203  | Request body format is valid. API key is valid for some, but not all, provided routing keys. Messages with disallowed routing keys had been dropped.
-400  | Request body is empty, or request body format is invalid.
-403  | Request body format is valid. API key is invalid for all provided routing keys. All messages had been dropped. 
+203  | Request is valid, but some event groups have routing keys that are either forbidden for this apikey or contain characters other than [A-Za-z0-9.-]. Messages with disallowed routing keys had been dropped.
+400  | Request body is empty, or request body format is invalid, or request is valid, but all event groups have routing keys that are either forbidden for this apikey or contain characters other than [A-Za-z0-9.-].
 
 #### Body
 

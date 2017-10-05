@@ -30,7 +30,7 @@ public class Application {
             int port = Integer.parseInt(appProperties.getProperty("port", "8888"));
 
             eventSender = new EventSender(producerProps);
-            httpServer = new HttpServer(eventSender, getAuthorizerFactory()).listen(port);
+            httpServer = new HttpServer(eventSender, getValidatorFactory()).listen(port);
 
             Log.info("Application started");
         } catch (Exception ex) {
@@ -49,14 +49,14 @@ public class Application {
         Log.info("Event sender stopped");
     }
 
-    private static AuthorizerFactory getAuthorizerFactory() throws IOException {
+    private static ValidatorFactory getValidatorFactory() throws IOException {
         Properties apiKeysProps = Application.getProperties("apikeys.properties");
         Map<String, String[]> apiKeysToRoutingKeyPatterns = new HashMap<>();
         for (String key : apiKeysProps.stringPropertyNames()) {
             String[] routingKeyPatterns = apiKeysProps.getProperty(key, "").trim().split("\\s*,\\s*");
             apiKeysToRoutingKeyPatterns.put(key, routingKeyPatterns);
         }
-        return new AuthorizerFactory(apiKeysToRoutingKeyPatterns);
+        return new ValidatorFactory(apiKeysToRoutingKeyPatterns);
     }
 
     private static InputStream getConfigStream(String configName) throws FileNotFoundException {
