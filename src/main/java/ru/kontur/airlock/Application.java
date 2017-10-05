@@ -13,33 +13,42 @@ import java.util.Properties;
 
 public class Application {
     private static Server httpServer;
+    private static EventSender eventSender;
     static final MetricRegistry metricRegistry = new MetricRegistry();
 
-    private static void initMetrics() {
-        final JmxReporter reporter = JmxReporter.forRegistry(metricRegistry).build();
-        reporter.start();
-    }
-
     public static void main(String[] args) throws Exception {
-        run();
+        try {
+            Log.info("Starting application");
+
+            org.apache.log4j.PropertyConfigurator.configure(getProperties("log4j.properties"));
+            org.apache.log4j.BasicConfigurator.configure();
+
+            JmxReporter.forRegistry(metricRegistry).build().start();
+
+            Properties producerProps = getProperties("producer.properties");
+            Properties appProperties = getProperties("app.properties");
+            int port = Integer.parseInt(appProperties.getProperty("port", "8888"));
+
+            eventSender = new EventSender(producerProps);
+            httpServer = new HttpServer(eventSender, getAuthorizerFactory()).listen(port);
+
+            Log.info("Application started");
+        } catch (Exception ex) {
+            StringWriter sw = new StringWriter();
+            ex.printStackTrace(new PrintWriter(sw));
+            Log.error(sw.toString());
+        }
+
         Runtime.getRuntime().addShutdownHook(new Thread(Application::shutdown));
         new BufferedReader(new InputStreamReader(System.in)).readLine();
     }
 
-    public static void run() {
-        try {
-            org.apache.log4j.PropertyConfigurator.configure(getProperties("log4j.properties"));
-            org.apache.log4j.BasicConfigurator.configure();
-            Log.info("Starting");
-            initMetrics();
-            Properties producerProps = getProperties("producer.properties");
-            Properties appProperties = getProperties("app.properties");
-            int port = Integer.parseInt(appProperties.getProperty("port", "8888"));
-            httpServer = new HttpServer(new EventSender(producerProps), getAuthorizerFactory()).listen(port);
-            Log.info("Server started");
-        } catch (Exception ex) {
-            logEx(ex);
-        }
+    private static void shutdown() {
+        httpServer.shutdown();
+        Log.info("HTTP server stopped");
+
+        eventSender.shutdown();
+        Log.info("Event sender stopped");
     }
 
     private static AuthorizerFactory getAuthorizerFactory() throws IOException {
@@ -50,12 +59,6 @@ public class Application {
             apiKeysToRoutingKeyPatterns.put(key, routingKeyPatterns);
         }
         return new AuthorizerFactory(apiKeysToRoutingKeyPatterns);
-    }
-
-    private static void logEx(Throwable e) {
-        StringWriter sw = new StringWriter();
-        e.printStackTrace(new PrintWriter(sw));
-        Log.error(sw.toString());
     }
 
     private static InputStream getConfigStream(String configName) throws FileNotFoundException {
@@ -76,10 +79,5 @@ public class Application {
         InputStream configStream = getConfigStream(configName);
         properties.load(configStream);
         return properties;
-    }
-
-    public static void shutdown() {
-        httpServer.shutdown();
-        Log.info("Server stopped");
     }
 }

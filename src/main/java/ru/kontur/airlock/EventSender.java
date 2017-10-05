@@ -6,9 +6,9 @@ import ru.kontur.airlock.dto.EventGroup;
 import ru.kontur.airlock.dto.EventRecord;
 
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 class EventSender {
-
     private final KafkaProducer<String, byte[]> kafkaProducer;
 
     EventSender(Properties properties) {
@@ -21,5 +21,10 @@ class EventSender {
         for (EventRecord record : eventGroup.eventRecords) {
             kafkaProducer.send(new ProducerRecord<>(eventGroup.eventRoutingKey, null, record.timestamp, null, record.data));
         }
+    }
+
+    void shutdown() {
+        kafkaProducer.flush();
+        kafkaProducer.close(10000, TimeUnit.MILLISECONDS);
     }
 }

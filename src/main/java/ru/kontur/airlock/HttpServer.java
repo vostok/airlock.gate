@@ -21,8 +21,9 @@ import static com.codahale.metrics.MetricRegistry.name;
 public class HttpServer extends AbstractHttpServer {
     private static final byte[] URI_PING = "/ping".getBytes();
     private static final byte[] URI_SEND = "/send".getBytes();
-    private static final byte[] URI_TH = "/th".getBytes();
-    private static final byte[] URI_THKB = "/thkb".getBytes();
+    private static final byte[] URI_THROUGHPUT = "/th".getBytes();      // Yandex.Tank report metrics, not used in production
+    private static final byte[] URI_THROUGHPUT_KB = "/thkb".getBytes(); // Yandex.Tank report metrics, not used in production
+
     private final EventSender eventSender;
     private final AuthorizerFactory authorizerFactory;
     private final Meter requestSizeMeter = Application.metricRegistry.meter(name(HttpServer.class, "request-size"));
@@ -47,9 +48,9 @@ public class HttpServer extends AbstractHttpServer {
             if (!matches(buf, req.verb, "POST".getBytes()))
                 return error(ctx, isKeepAlive, "Method not allowed", 405);
             return send(ctx, buf, req, isKeepAlive);
-        } else if (matches(buf, req.path, URI_TH)) {
+        } else if (matches(buf, req.path, URI_THROUGHPUT)) {
             return ok(ctx, isKeepAlive, metricsReporter.getLastThroughput().getBytes(), MediaType.TEXT_PLAIN);
-        } else if (matches(buf, req.path, URI_THKB)) {
+        } else if (matches(buf, req.path, URI_THROUGHPUT_KB)) {
             return ok(ctx, isKeepAlive, metricsReporter.getLastThroughputKb().getBytes(), MediaType.TEXT_PLAIN);
         }
         return HttpStatus.NOT_FOUND;
