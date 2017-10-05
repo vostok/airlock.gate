@@ -34,9 +34,7 @@ public class Application {
 
             Log.info("Application started");
         } catch (Exception ex) {
-            StringWriter sw = new StringWriter();
-            ex.printStackTrace(new PrintWriter(sw));
-            Log.error(sw.toString());
+            Log.error("Main error", ex);
         }
 
         Runtime.getRuntime().addShutdownHook(new Thread(Application::shutdown));
