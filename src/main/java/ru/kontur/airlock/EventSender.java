@@ -1,9 +1,11 @@
 package ru.kontur.airlock;
 
+import com.codahale.metrics.Gauge;
 import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
+import org.apache.kafka.common.Metric;
 import org.rapidoid.log.Log;
 import ru.kontur.airlock.dto.EventGroup;
 import ru.kontur.airlock.dto.EventRecord;
@@ -11,17 +13,24 @@ import ru.kontur.airlock.dto.EventRecord;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
+import static com.codahale.metrics.MetricRegistry.name;
+
 class EventSender {
     private final KafkaProducer<String, byte[]> kafkaProducer;
 
-    EventSender(Properties properties) {
-        properties.setProperty(
+    EventSender(Properties kafkaProperties) {
+        kafkaProperties.setProperty(
                 "key.serializer",
                 "org.apache.kafka.common.serialization.ByteArraySerializer");
-        properties.setProperty(
+        kafkaProperties.setProperty(
                 "value.serializer",
                 "org.apache.kafka.common.serialization.ByteArraySerializer");
-        this.kafkaProducer = new KafkaProducer<>(properties);
+        this.kafkaProducer = new KafkaProducer<>(kafkaProperties);
+
+        for (Metric metric : this.kafkaProducer.metrics().values()) {
+            Application.metricRegistry.register(name("producer", metric.metricName().name()),
+                    (Gauge<Long>) () -> (long)metric.value());
+        }
     }
 
     void send(EventGroup eventGroup) {

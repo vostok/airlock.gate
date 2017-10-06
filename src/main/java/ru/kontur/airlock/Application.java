@@ -28,9 +28,10 @@ public class Application {
             Properties producerProps = getProperties("producer.properties");
             Properties appProperties = getProperties("app.properties");
             int port = Integer.parseInt(appProperties.getProperty("port", "8888"));
+            boolean useInternalMeter = Integer.parseInt(appProperties.getProperty("useInternalMeter", "0")) > 0;
 
             eventSender = new EventSender(producerProps);
-            httpServer = new HttpServer(eventSender, getValidatorFactory()).listen(port);
+            httpServer = new HttpServer(eventSender, getValidatorFactory(), useInternalMeter).listen(port);
 
             Log.info("Application started");
         } catch (Exception ex) {

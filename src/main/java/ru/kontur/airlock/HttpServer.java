@@ -7,6 +7,7 @@ import org.rapidoid.data.BufRange;
 import org.rapidoid.http.AbstractHttpServer;
 import org.rapidoid.http.HttpStatus;
 import org.rapidoid.http.MediaType;
+import org.rapidoid.log.Log;
 import org.rapidoid.net.abstracts.Channel;
 import org.rapidoid.net.impl.RapidoidHelper;
 import ru.kontur.airlock.dto.AirlockMessage;
@@ -27,14 +28,14 @@ public class HttpServer extends AbstractHttpServer {
     private final EventSender eventSender;
     private final ValidatorFactory validatorFactory;
     private final Meter requestSizeMeter = Application.metricRegistry.meter(name(HttpServer.class, "request-size"));
-    private final Meter eventMeter = Application.metricRegistry.meter(name(HttpServer.class, "events"));
+    private final Meter eventMeter = Application.metricRegistry.meter(name(HttpServer.class, "events", "total"));
     private final Timer requests = Application.metricRegistry.timer(name(HttpServer.class, "requests"));
     private final MetricsReporter metricsReporter;
 
-    HttpServer(EventSender eventSender, ValidatorFactory validatorFactory) throws IOException {
+    HttpServer(EventSender eventSender, ValidatorFactory validatorFactory, boolean useInternalMeter) throws IOException {
         this.eventSender = eventSender;
         this.validatorFactory = validatorFactory;
-        metricsReporter = new MetricsReporter(3, eventMeter, requestSizeMeter);
+        metricsReporter = useInternalMeter ? new MetricsReporter(3, eventMeter, requestSizeMeter) : null;
     }
 
     @Override
@@ -49,8 +50,12 @@ public class HttpServer extends AbstractHttpServer {
                 return error(ctx, isKeepAlive, "Method not allowed", 405);
             return send(ctx, buf, req, isKeepAlive);
         } else if (matches(buf, req.path, URI_THROUGHPUT)) {
+            if (metricsReporter == null)
+                return error(ctx, isKeepAlive, "Internal meter disabled", 405);
             return ok(ctx, isKeepAlive, metricsReporter.getLastThroughput().getBytes(), MediaType.TEXT_PLAIN);
         } else if (matches(buf, req.path, URI_THROUGHPUT_KB)) {
+            if (metricsReporter == null)
+                return error(ctx, isKeepAlive, "Internal meter disabled", 405);
             return ok(ctx, isKeepAlive, metricsReporter.getLastThroughputKb().getBytes(), MediaType.TEXT_PLAIN);
         }
         return HttpStatus.NOT_FOUND;
@@ -60,11 +65,15 @@ public class HttpServer extends AbstractHttpServer {
         final Timer.Context timerContext = requests.time();
         try {
             String apiKey = getHeader(buf, req, "x-apikey");
-            if (apiKey == null || apiKey.trim().isEmpty())
+            if (apiKey == null || apiKey.trim().isEmpty()) {
+                getErrorMeter("apikey").mark();
                 return error(ctx, isKeepAlive, "Apikey is not provided in x-apikey header", 401);
+            }
 
-            if (req.body == null || req.body.length == 0)
+            if (req.body == null || req.body.length == 0) {
+                getErrorMeter("emptybody").mark();
                 return error(ctx, isKeepAlive, "Request body is empty", 400);
+            }
             byte[] body = new byte[req.body.length];
             buf.get(req.body, body, 0);
 
@@ -72,6 +81,7 @@ public class HttpServer extends AbstractHttpServer {
             try {
                 message = AirlockMessage.fromByteArray(body, AirlockMessage.class);
             } catch (IOException e) {
+                getErrorMeter("deserialization").mark();
                 return error(ctx, isKeepAlive, e.getMessage(), 400);
             }
 
@@ -82,7 +92,9 @@ public class HttpServer extends AbstractHttpServer {
             int eventCount = 0;
             for (EventGroup eventGroup : validEventGroups) {
                 eventSender.send(eventGroup);
-                eventCount += eventGroup.eventRecords.size();
+                int groupSize = eventGroup.eventRecords.size();
+                eventCount += groupSize;
+                getRoutingKeyMeter(eventGroup.eventRoutingKey).mark(groupSize);
             }
             eventMeter.mark(eventCount);
             requestSizeMeter.mark(req.body.length);
@@ -96,12 +108,22 @@ public class HttpServer extends AbstractHttpServer {
         }
     }
 
+    private Meter getRoutingKeyMeter(String routingKey) {
+        return Application.metricRegistry.meter(name(HttpServer.class, "events", routingKey.replace('.','-')));
+    }
+
+    private Meter getErrorMeter(String errorType) {
+        return Application.metricRegistry.meter(name(HttpServer.class, "errors", errorType));
+    }
+
     private ArrayList<EventGroup> filterEventGroupsForApiKey(String apiKey, AirlockMessage message) {
         ArrayList<EventGroup> validatedEventGroups = new ArrayList<>();
         Validator validator = validatorFactory.getValidator(apiKey);
         for (EventGroup eventGroup : message.eventGroups) {
             if (validator.validate(eventGroup.eventRoutingKey)) {
                 validatedEventGroups.add(eventGroup);
+            } else {
+                getErrorMeter("routingkey").mark();
             }
         }
         return validatedEventGroups;
@@ -121,6 +143,7 @@ public class HttpServer extends AbstractHttpServer {
     }
 
     private HttpStatus error(Channel ctx, boolean isKeepAlive, String message, int httpStatusCode) {
+        Log.warn(message);
         byte[] response = message.getBytes();
         this.startResponse(ctx, httpStatusCode, isKeepAlive);
         this.writeBody(ctx, response, 0, response.length, MediaType.TEXT_PLAIN);
