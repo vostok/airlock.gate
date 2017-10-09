@@ -14,14 +14,14 @@ import java.util.concurrent.TimeUnit;
 class EventSender {
     private final KafkaProducer<String, byte[]> kafkaProducer;
 
-    EventSender(Properties properties) {
-        properties.setProperty(
+    EventSender(Properties kafkaProperties) {
+        kafkaProperties.setProperty(
                 "key.serializer",
                 "org.apache.kafka.common.serialization.ByteArraySerializer");
-        properties.setProperty(
+        kafkaProperties.setProperty(
                 "value.serializer",
                 "org.apache.kafka.common.serialization.ByteArraySerializer");
-        this.kafkaProducer = new KafkaProducer<>(properties);
+        this.kafkaProducer = new KafkaProducer<>(kafkaProperties);
     }
 
     void send(EventGroup eventGroup) {

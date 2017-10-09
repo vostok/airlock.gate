@@ -7,6 +7,7 @@ import org.rapidoid.data.BufRange;
 import org.rapidoid.http.AbstractHttpServer;
 import org.rapidoid.http.HttpStatus;
 import org.rapidoid.http.MediaType;
+import org.rapidoid.log.Log;
 import org.rapidoid.net.abstracts.Channel;
 import org.rapidoid.net.impl.RapidoidHelper;
 import ru.kontur.airlock.dto.AirlockMessage;
@@ -27,14 +28,14 @@ public class HttpServer extends AbstractHttpServer {
     private final EventSender eventSender;
     private final ValidatorFactory validatorFactory;
     private final Meter requestSizeMeter = Application.metricRegistry.meter(name(HttpServer.class, "request-size"));
-    private final Meter eventMeter = Application.metricRegistry.meter(name(HttpServer.class, "events"));
+    private final Meter eventMeter = Application.metricRegistry.meter(name(HttpServer.class, "events", "total"));
     private final Timer requests = Application.metricRegistry.timer(name(HttpServer.class, "requests"));
     private final MetricsReporter metricsReporter;
 
-    HttpServer(EventSender eventSender, ValidatorFactory validatorFactory) throws IOException {
+    HttpServer(EventSender eventSender, ValidatorFactory validatorFactory, boolean useInternalMeter) throws IOException {
         this.eventSender = eventSender;
         this.validatorFactory = validatorFactory;
-        metricsReporter = new MetricsReporter(3, eventMeter, requestSizeMeter);
+        metricsReporter = useInternalMeter ? new MetricsReporter(3, eventMeter, requestSizeMeter) : null;
     }
 
     @Override
@@ -42,15 +43,19 @@ public class HttpServer extends AbstractHttpServer {
         boolean isKeepAlive = req.isKeepAlive.value;
         if (matches(buf, req.path, URI_PING)) {
             if (!matches(buf, req.verb, "GET".getBytes()))
-                return error(ctx, isKeepAlive, "Method not allowed", 405);
+                return error(ctx, isKeepAlive, "Method not allowed", 405, null);
             return ok(ctx, isKeepAlive, new byte[0], MediaType.TEXT_PLAIN);
         } else if (matches(buf, req.path, URI_SEND)) {
             if (!matches(buf, req.verb, "POST".getBytes()))
-                return error(ctx, isKeepAlive, "Method not allowed", 405);
+                return error(ctx, isKeepAlive, "Method not allowed", 405, null);
             return send(ctx, buf, req, isKeepAlive);
         } else if (matches(buf, req.path, URI_THROUGHPUT)) {
+            if (metricsReporter == null)
+                return error(ctx, isKeepAlive, "Internal meter disabled", 405, null);
             return ok(ctx, isKeepAlive, metricsReporter.getLastThroughput().getBytes(), MediaType.TEXT_PLAIN);
         } else if (matches(buf, req.path, URI_THROUGHPUT_KB)) {
+            if (metricsReporter == null)
+                return error(ctx, isKeepAlive, "Internal meter disabled", 405, null);
             return ok(ctx, isKeepAlive, metricsReporter.getLastThroughputKb().getBytes(), MediaType.TEXT_PLAIN);
         }
         return HttpStatus.NOT_FOUND;
@@ -60,11 +65,15 @@ public class HttpServer extends AbstractHttpServer {
         final Timer.Context timerContext = requests.time();
         try {
             String apiKey = getHeader(buf, req, "x-apikey");
-            if (apiKey == null || apiKey.trim().isEmpty())
-                return error(ctx, isKeepAlive, "Apikey is not provided in x-apikey header", 401);
+            if (apiKey == null || apiKey.trim().isEmpty()) {
+                getErrorMeter("apikey-missing").mark();
+                return error(ctx, isKeepAlive, "Apikey is not provided in x-apikey header", 401, null);
+            }
 
-            if (req.body == null || req.body.length == 0)
-                return error(ctx, isKeepAlive, "Request body is empty", 400);
+            if (req.body == null || req.body.length == 0) {
+                getErrorMeter("empty-body").mark();
+                return error(ctx, isKeepAlive, "Request body is empty", 400, apiKey);
+            }
             byte[] body = new byte[req.body.length];
             buf.get(req.body, body, 0);
 
@@ -72,28 +81,42 @@ public class HttpServer extends AbstractHttpServer {
             try {
                 message = AirlockMessage.fromByteArray(body, AirlockMessage.class);
             } catch (IOException e) {
-                return error(ctx, isKeepAlive, e.getMessage(), 400);
+                getErrorMeter("deserialization").mark();
+                return error(ctx, isKeepAlive, e.getMessage(), 400, apiKey);
             }
 
             ArrayList<EventGroup> validEventGroups = filterEventGroupsForApiKey(apiKey, message);
-            if (validEventGroups.size() == 0)
-                return error(ctx, isKeepAlive, "Request is valid, but all event groups have routing keys that are either forbidden for this apikey or contain characters other than [A-Za-z0-9.-]", 400);
+            if (validEventGroups.size() == 0) {
+                getErrorMeter("filtered").mark();
+                return error(ctx, isKeepAlive, "Request is valid, but all event groups have routing keys that are either forbidden for this apikey or contain characters other than [A-Za-z0-9.-]", 400, apiKey);
+            }
 
             int eventCount = 0;
             for (EventGroup eventGroup : validEventGroups) {
                 eventSender.send(eventGroup);
-                eventCount += eventGroup.eventRecords.size();
+                int groupSize = eventGroup.eventRecords.size();
+                eventCount += groupSize;
+                getRoutingKeyMeter(eventGroup.eventRoutingKey).mark(groupSize);
             }
             eventMeter.mark(eventCount);
             requestSizeMeter.mark(req.body.length);
 
-            if (validEventGroups.size() < message.eventGroups.size())
-                return error(ctx, isKeepAlive, "Request is valid, but some event groups have routing keys that are either forbidden for this apikey or contain characters other than [A-Za-z0-9.-]", 203);
-            else
+            if (validEventGroups.size() < message.eventGroups.size()) {
+                getErrorMeter("filtered-partial").mark();
+                return error(ctx, isKeepAlive, "Request is valid, but some event groups have routing keys that are either forbidden for this apikey or contain characters other than [A-Za-z0-9.-]", 203, apiKey);
+            } else
                 return ok(ctx, isKeepAlive, new byte[0], MediaType.TEXT_PLAIN);
         } finally {
             timerContext.stop();
         }
+    }
+
+    private Meter getRoutingKeyMeter(String routingKey) {
+        return Application.metricRegistry.meter(name(HttpServer.class, "events", routingKey.replace('.','-')));
+    }
+
+    private Meter getErrorMeter(String errorType) {
+        return Application.metricRegistry.meter(name(HttpServer.class, "errors", errorType));
     }
 
     private ArrayList<EventGroup> filterEventGroupsForApiKey(String apiKey, AirlockMessage message) {
@@ -102,6 +125,8 @@ public class HttpServer extends AbstractHttpServer {
         for (EventGroup eventGroup : message.eventGroups) {
             if (validator.validate(eventGroup.eventRoutingKey)) {
                 validatedEventGroups.add(eventGroup);
+            } else {
+                Log.warn("invalid routingkey or access denied, routingKey=" + eventGroup.eventRoutingKey + ", apikey=" + apiKey);
             }
         }
         return validatedEventGroups;
@@ -120,7 +145,8 @@ public class HttpServer extends AbstractHttpServer {
         return value;
     }
 
-    private HttpStatus error(Channel ctx, boolean isKeepAlive, String message, int httpStatusCode) {
+    private HttpStatus error(Channel ctx, boolean isKeepAlive, String message, int httpStatusCode, String apiKey) {
+        Log.warn(message + (apiKey == null ? "" : ", apikey=" + apiKey));
         byte[] response = message.getBytes();
         this.startResponse(ctx, httpStatusCode, isKeepAlive);
         this.writeBody(ctx, response, 0, response.length, MediaType.TEXT_PLAIN);
