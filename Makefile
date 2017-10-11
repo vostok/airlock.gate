@@ -1,7 +1,7 @@
 .PHONY: run build travis-build-packages
 
 run: build
-	java -Xms16g -Xmx16g -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -jar ./target/vostok-airlock-gate-1.0-SNAPSHOT.jar
+	java -Xms256m -Xmx256m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -jar ./target/vostok-airlock-gate-1.0-SNAPSHOT.jar
 
 build:
 	mvn clean package
