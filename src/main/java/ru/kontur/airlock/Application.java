@@ -27,7 +27,7 @@ public class Application {
 
             Properties producerProps = getProperties("producer.properties");
             Properties appProperties = getProperties("app.properties");
-            int port = Integer.parseInt(appProperties.getProperty("port", "8888"));
+            int port = Integer.parseInt(appProperties.getProperty("port", "6306"));
             boolean useInternalMeter = Integer.parseInt(appProperties.getProperty("useInternalMeter", "0")) > 0;
 
             eventSender = new EventSender(producerProps);
