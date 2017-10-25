@@ -20,6 +20,7 @@ import static com.codahale.metrics.MetricRegistry.name;
 
 
 public class HttpServer extends AbstractHttpServer {
+    private static final byte[] URI_ROOT = "/".getBytes();
     private static final byte[] URI_PING = "/ping".getBytes();
     private static final byte[] URI_SEND = "/send".getBytes();
     private static final byte[] URI_THROUGHPUT = "/th".getBytes();      // Yandex.Tank report metrics, not used in production
@@ -57,6 +58,10 @@ public class HttpServer extends AbstractHttpServer {
             if (metricsReporter == null)
                 return error(ctx, isKeepAlive, "Internal meter disabled", 405, null);
             return ok(ctx, isKeepAlive, metricsReporter.getLastThroughputKb().getBytes(), MediaType.TEXT_PLAIN);
+        } else if (matches(buf, req.path, URI_ROOT)) {
+            if (!matches(buf, req.verb, "GET".getBytes()))
+                return error(ctx, isKeepAlive, "Method not allowed", 405, null);
+            return ok(ctx, isKeepAlive, "Gate is running".getBytes(), MediaType.TEXT_PLAIN);
         }
         return HttpStatus.NOT_FOUND;
     }
