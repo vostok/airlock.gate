@@ -11,23 +11,27 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="Maven: org.rapidoid:rapidoid-http-fast:5.4.4" level="project" />
-    <orderEntry type="library" name="Maven: org.rapidoid:rapidoid-net:5.4.4" level="project" />
-    <orderEntry type="library" name="Maven: org.rapidoid:rapidoid-buffer:5.4.4" level="project" />
-    <orderEntry type="library" name="Maven: org.rapidoid:rapidoid-commons:5.4.4" level="project" />
-    <orderEntry type="library" name="Maven: org.rapidoid:rapidoid-essentials:5.4.4" level="project" />
-    <orderEntry type="library" name="Maven: org.javassist:javassist:3.20.0-GA" level="project" />
+    <orderEntry type="library" name="Maven: org.rapidoid:rapidoid-http-fast:5.5.0" level="project" />
+    <orderEntry type="library" name="Maven: org.rapidoid:rapidoid-net:5.5.0" level="project" />
+    <orderEntry type="library" name="Maven: org.rapidoid:rapidoid-buffer:5.5.0" level="project" />
+    <orderEntry type="library" name="Maven: org.rapidoid:rapidoid-commons:5.5.0" level="project" />
+    <orderEntry type="library" name="Maven: org.rapidoid:rapidoid-essentials:5.5.0" level="project" />
+    <orderEntry type="library" name="Maven: org.javassist:javassist:3.22.0-GA" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-databind:2.8.5" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.8.0" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-core:2.8.5" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.module:jackson-module-afterburner:2.8.5" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.8.5" level="project" />
     <orderEntry type="library" name="Maven: org.yaml:snakeyaml:1.17" level="project" />
+    <orderEntry type="library" name="Maven: com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.8.5" level="project" />
+    <orderEntry type="library" name="Maven: com.fasterxml.jackson.module:jackson-module-jaxb-annotations:2.8.5" level="project" />
+    <orderEntry type="library" name="Maven: org.codehaus.woodstox:stax2-api:3.1.4" level="project" />
+    <orderEntry type="library" name="Maven: com.fasterxml.woodstox:woodstox-core:5.0.3" level="project" />
     <orderEntry type="library" name="Maven: javax.inject:javax.inject:1" level="project" />
-    <orderEntry type="library" name="Maven: org.rapidoid:rapidoid-render:5.4.4" level="project" />
-    <orderEntry type="library" name="Maven: org.rapidoid:rapidoid-jpa:5.4.4" level="project" />
-    <orderEntry type="library" name="Maven: org.rapidoid:rapidoid-sql:5.4.4" level="project" />
-    <orderEntry type="library" name="Maven: org.rapidoid:rapidoid-inject:5.4.4" level="project" />
+    <orderEntry type="library" name="Maven: org.rapidoid:rapidoid-render:5.5.0" level="project" />
+    <orderEntry type="library" name="Maven: org.rapidoid:rapidoid-jpa:5.5.0" level="project" />
+    <orderEntry type="library" name="Maven: org.rapidoid:rapidoid-sql:5.5.0" level="project" />
+    <orderEntry type="library" name="Maven: org.rapidoid:rapidoid-inject:5.5.0" level="project" />
     <orderEntry type="library" name="Maven: org.apache.kafka:kafka_2.11:0.11.0.1" level="project" />
     <orderEntry type="library" name="Maven: net.sf.jopt-simple:jopt-simple:5.0.3" level="project" />
     <orderEntry type="library" name="Maven: com.yammer.metrics:metrics-core:2.2.0" level="project" />

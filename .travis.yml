@@ -15,5 +15,5 @@ deploy:
   script: "curl -sS --fail -F \"uploadfile=@${PACKAGE_NAME}\" -H 'token: ${UPLOAD_TOKEN}' \"${UPLOAD_URL}\""
   skip_cleanup: true
   on:
-    repo: vostok-project/airlock
+    repo: vostok/airlock.gate
     all_branches: true

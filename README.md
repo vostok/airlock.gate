@@ -1,4 +1,4 @@
-# Airlock Gate [![Build Status](https://travis-ci.org/vostok-project/airlock.svg?branch=master)](https://travis-ci.org/vostok-project/airlock)
+# Airlock Gate [![Build Status](https://travis-ci.org/vostok/airlock.gate.svg?branch=master)](https://travis-ci.org/vostok/airlock.gate)
 
 A proxy between your Vostok-instrumented applications and Kafka.
 
