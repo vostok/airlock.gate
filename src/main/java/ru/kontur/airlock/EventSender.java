@@ -25,6 +25,7 @@ public class EventSender {
     }
 
     public void send(EventGroup eventGroup) {
+        Log.info("Send event group. Size=" + eventGroup.eventRecords.size() + ", key=" + eventGroup.eventRoutingKey);
         for (EventRecord record : eventGroup.eventRecords) {
             ProducerRecord<String, byte[]> pr = new ProducerRecord<>(
                     eventGroup.eventRoutingKey,
