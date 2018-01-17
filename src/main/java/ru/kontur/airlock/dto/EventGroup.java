@@ -6,7 +6,7 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-public class EventGroup extends BinarySerializable {
+public final class EventGroup implements BinarySerializable {
     public String eventRoutingKey;
     public List<EventRecord> eventRecords = new ArrayList<>();
 

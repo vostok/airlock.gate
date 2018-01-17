@@ -9,7 +9,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-class SerializationHelper {
+final class SerializationHelper {
+    private SerializationHelper() {}
 
     private static void writeInt(OutputStream stream, int value) throws IOException {
         stream.write(ByteBuffer.allocate(Integer.BYTES).order(ByteOrder.LITTLE_ENDIAN).putInt(value).array());
@@ -80,19 +81,26 @@ class SerializationHelper {
             throw new IOException("Could not read " + arr.length + " bytes. Was " + size + " only.");
     }
 
-    static <T extends BinarySerializable> List<T> readList(InputStream stream, Class<T> itemClass) throws IOException {
+    static <T extends BinarySerializable> List<T> readList(InputStream stream, Class<T> clazz) throws IOException {
         int size = readInt(stream);
         ArrayList<T> list = new ArrayList<>();
         for (int i = 0; i < size; i++) {
-            T item;
-            try {
-                item = itemClass.newInstance();
-            } catch (Exception e) {
-                throw new IOException("Could not create instance", e);
-            }
-            item.read(stream);
+            T item = read(stream, clazz);
             list.add(item);
         }
         return list;
+    }
+
+    static <T extends BinarySerializable> T read(InputStream stream, Class<T> clazz) throws IOException {
+        T item;
+
+        try {
+            item = clazz.newInstance();
+        } catch (Exception e) {
+            throw new IOException("Could not create instance", e);
+        }
+        item.read(stream);
+
+        return item;
     }
 }

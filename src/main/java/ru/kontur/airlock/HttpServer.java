@@ -11,6 +11,7 @@ import org.rapidoid.log.Log;
 import org.rapidoid.net.abstracts.Channel;
 import org.rapidoid.net.impl.RapidoidHelper;
 import ru.kontur.airlock.dto.AirlockMessage;
+import ru.kontur.airlock.dto.BinarySerializable;
 import ru.kontur.airlock.dto.EventGroup;
 
 import java.io.IOException;
@@ -84,7 +85,7 @@ public class HttpServer extends AbstractHttpServer {
 
             AirlockMessage message;
             try {
-                message = AirlockMessage.fromByteArray(body, AirlockMessage.class);
+                message = BinarySerializable.fromByteArray(body, AirlockMessage.class);
             } catch (IOException e) {
                 getErrorMeter("deserialization").mark();
                 return error(ctx, isKeepAlive, e.getMessage(), 400, apiKey);
@@ -109,8 +110,9 @@ public class HttpServer extends AbstractHttpServer {
             if (validEventGroups.size() < message.eventGroups.size()) {
                 getErrorMeter("filtered-partial").mark();
                 return error(ctx, isKeepAlive, "Request is valid, but some event groups have routing keys that are either forbidden for this apikey or contain characters other than [A-Za-z0-9.-]", 203, apiKey);
-            } else
+            } else {
                 return ok(ctx, isKeepAlive, new byte[0], MediaType.TEXT_PLAIN);
+            }
         } finally {
             timerContext.stop();
         }

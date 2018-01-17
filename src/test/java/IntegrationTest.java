@@ -108,7 +108,7 @@ public class IntegrationTest {
         return new KafkaConsumer<byte[],byte[]>(props);
     }
 
-    public class GoBackOnRebalance implements ConsumerRebalanceListener {
+    public static class GoBackOnRebalance implements ConsumerRebalanceListener {
         private final int seconds;
         private Consumer<?, ?> consumer;
 
@@ -118,7 +118,7 @@ public class IntegrationTest {
         }
 
         public void onPartitionsRevoked(Collection<TopicPartition> partitions) {
-            Log.info("Revoke " + String.join(",", partitions.stream().map(x -> x.toString()).collect(Collectors.toList())));
+            Log.info("Revoke " + String.join(",", partitions.stream().map(TopicPartition::toString).collect(Collectors.toList())));
         }
 
         public void onPartitionsAssigned(Collection<TopicPartition> partitions) {
@@ -132,7 +132,7 @@ public class IntegrationTest {
                     offset = offsetAndTimestamp.offset();
                     Log.info("Rewind consumer for " + topicPartition + " to " + offsetAndTimestamp);
                 } else {
-                    offset = consumer.endOffsets(Arrays.asList(topicPartition)).get(topicPartition);
+                    offset = consumer.endOffsets(Collections.singletonList(topicPartition)).get(topicPartition);
                     Log.info("Rewind consumer for " + topicPartition + " to the end");
                 }
                 consumer.seek(topicPartition, offset);

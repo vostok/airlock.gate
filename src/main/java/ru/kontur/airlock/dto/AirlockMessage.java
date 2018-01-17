@@ -6,7 +6,7 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AirlockMessage extends BinarySerializable {
+public final class AirlockMessage implements BinarySerializable {
     private static final short version = 1;
     public List<EventGroup> eventGroups = new ArrayList<>();
 
@@ -17,8 +17,9 @@ public class AirlockMessage extends BinarySerializable {
 
     public void read(InputStream stream) throws IOException {
         short dataVersion = SerializationHelper.readShort(stream);
-        if (dataVersion != version)
+        if (dataVersion != version) {
             throw new IOException("Invalid data version");
+        }
         eventGroups = SerializationHelper.readList(stream, EventGroup.class);
     }
 }

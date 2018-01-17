@@ -21,17 +21,19 @@ public class Validator {
     private boolean validateApiKeyAccess(String eventRoutingKey) {
         if (allowedRoutingKeyPatterns != null) {
             for (String pattern : allowedRoutingKeyPatterns) {
-                if (matches(eventRoutingKey, pattern))
+                if (matches(eventRoutingKey, pattern)) {
                     return true;
+                }
             }
         }
         return false;
     }
 
     private boolean matches(String eventRoutingKey, String pattern) {
-        if (pattern.endsWith("*"))
+        if (pattern.endsWith("*")) {
             return eventRoutingKey.toLowerCase().startsWith(pattern.substring(0, pattern.length() - 1).toLowerCase());
-        else
+        } else {
             return eventRoutingKey.equalsIgnoreCase(pattern);
+        }
     }
 }

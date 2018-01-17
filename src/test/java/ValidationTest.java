@@ -21,13 +21,13 @@ public class ValidationTest {
     }
 
     @Test
-    public void UnregisteredApiKey() throws Exception {
+    public void unregisteredApiKey() throws Exception {
         Validator validator = validatorFactory.getValidator("UnregisteredApiKey");
         Assert.assertEquals(false, validator.validate("project.env"));
     }
 
     @Test
-    public void ExactPattern() throws Exception {
+    public void exactPattern() throws Exception {
         Validator validator = validatorFactory.getValidator("ExactPatternApiKey");
         Assert.assertEquals(true, validator.validate("project.env"));
         Assert.assertEquals(false, validator.validate("project.env.whatever"));
@@ -35,7 +35,7 @@ public class ValidationTest {
     }
 
     @Test
-    public void WildcardPattern() throws Exception {
+    public void wildcardPattern() throws Exception {
         Validator validator = validatorFactory.getValidator("WildcardPatternApiKey");
         Assert.assertEquals(true, validator.validate("project.env.whatever"));
         Assert.assertEquals(false, validator.validate("project.envwhatever"));
@@ -44,7 +44,7 @@ public class ValidationTest {
     }
 
     @Test
-    public void SeveralPatterns() throws Exception {
+    public void severalPatterns() throws Exception {
         Validator validator = validatorFactory.getValidator("SeveralPatternsApiKey");
         Assert.assertEquals(true, validator.validate("project.dev"));
         Assert.assertEquals(true, validator.validate("project.staging"));
@@ -53,7 +53,7 @@ public class ValidationTest {
     }
 
     @Test
-    public void IgnoringCasePatterns() throws Exception {
+    public void ignoringCasePatterns() throws Exception {
         Validator validator = validatorFactory.getValidator("IgnoringCasePatternsApiKey");
         Assert.assertEquals(true, validator.validate("project.env"));
         Assert.assertEquals(true, validator.validate("project.enV"));
@@ -64,7 +64,7 @@ public class ValidationTest {
     }
 
     @Test
-    public void ForbiddenCharacters() throws Exception {
+    public void forbiddenCharacters() throws Exception {
         Validator validator = validatorFactory.getValidator("UniversalApiKey");
         Assert.assertEquals(true, validator.validate("project.env"));
         Assert.assertEquals(false, validator.validate("project:env"));

@@ -8,7 +8,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-class MetricsReporter {
+final class MetricsReporter {
     private double lastThroughput = 0;
     private long lastThroughputBytes = 0;
 
@@ -16,6 +16,9 @@ class MetricsReporter {
     private long lastRequestSizeCount = 0;
 
     MetricsReporter(int reportingIntervalSeconds, Meter eventMeter, Meter requestSizeMeter) {
+        if (reportingIntervalSeconds <= 0) {
+            throw new IllegalArgumentException("reportingIntervalSeconds cannot be less than or equal to zero");
+        }
         ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
         executor.scheduleAtFixedRate(() -> {
             synchronized (this) {
