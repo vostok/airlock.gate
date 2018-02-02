@@ -11,7 +11,7 @@ import ru.kontur.airlock.dto.EventRecord;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
-class EventSender {
+public class EventSender {
     private final KafkaProducer<String, byte[]> kafkaProducer;
 
     EventSender(Properties kafkaProperties) {
@@ -24,7 +24,7 @@ class EventSender {
         this.kafkaProducer = new KafkaProducer<>(kafkaProperties);
     }
 
-    void send(EventGroup eventGroup) {
+    public void send(EventGroup eventGroup) {
         for (EventRecord record : eventGroup.eventRecords) {
             ProducerRecord<String, byte[]> pr = new ProducerRecord<>(
                     eventGroup.eventRoutingKey,

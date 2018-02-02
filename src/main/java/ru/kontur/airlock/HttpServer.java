@@ -34,7 +34,7 @@ public class HttpServer extends AbstractHttpServer {
     private final Timer requests = Application.metricRegistry.timer(name(HttpServer.class, "requests"));
     private final MetricsReporter metricsReporter;
 
-    HttpServer(EventSender eventSender, ValidatorFactory validatorFactory, boolean useInternalMeter) throws IOException {
+    public HttpServer(EventSender eventSender, ValidatorFactory validatorFactory, boolean useInternalMeter) throws IOException {
         this.eventSender = eventSender;
         this.validatorFactory = validatorFactory;
         metricsReporter = useInternalMeter ? new MetricsReporter(3, eventMeter, requestSizeMeter) : null;
@@ -91,7 +91,13 @@ public class HttpServer extends AbstractHttpServer {
                 return error(ctx, isKeepAlive, e.getMessage(), 400, apiKey);
             }
 
-            ArrayList<EventGroup> validEventGroups = filterEventGroupsForApiKey(apiKey, message);
+            Validator validator = validatorFactory.getValidator(apiKey);
+            if (!validator.validateApiKey()) {
+                getErrorMeter("invalid-apikey").mark();
+                return error(ctx, isKeepAlive, "Invalid Apikey", 401, apiKey);
+            }
+
+            ArrayList<EventGroup> validEventGroups = filterEventGroupsForApiKey(validator, message, apiKey);
             if (validEventGroups.size() == 0) {
                 getErrorMeter("filtered").mark();
                 return error(ctx, isKeepAlive, "Request is valid, but all event groups have routing keys that are either forbidden for this apikey or contain characters other than [A-Za-z0-9.-]", 400, apiKey);
@@ -126,9 +132,8 @@ public class HttpServer extends AbstractHttpServer {
         return Application.metricRegistry.meter(name(HttpServer.class, "errors", errorType));
     }
 
-    private ArrayList<EventGroup> filterEventGroupsForApiKey(String apiKey, AirlockMessage message) {
+    private ArrayList<EventGroup> filterEventGroupsForApiKey(Validator validator, AirlockMessage message, String apiKey) {
         ArrayList<EventGroup> validatedEventGroups = new ArrayList<>();
-        Validator validator = validatorFactory.getValidator(apiKey);
         for (EventGroup eventGroup : message.eventGroups) {
             if (validator.validate(eventGroup.eventRoutingKey)) {
                 validatedEventGroups.add(eventGroup);

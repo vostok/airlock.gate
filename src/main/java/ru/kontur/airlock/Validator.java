@@ -14,6 +14,10 @@ public class Validator {
         return validateForbiddenCharacters(eventRoutingKey) && validateApiKeyAccess(eventRoutingKey);
     }
 
+    public boolean validateApiKey() {
+        return allowedRoutingKeyPatterns != null;
+    }
+
     private boolean validateForbiddenCharacters(String eventRoutingKey) {
         return allowedCharacters.matcher(eventRoutingKey).matches();
     }
