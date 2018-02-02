@@ -26,7 +26,7 @@ class EventSender {
 
     void send(EventGroup eventGroup) {
         for (EventRecord record : eventGroup.eventRecords) {
-            ProducerRecord pr = new ProducerRecord<>(
+            ProducerRecord<String, byte[]> pr = new ProducerRecord<>(
                     eventGroup.eventRoutingKey,
                     null,
                     record.timestamp,
@@ -41,26 +41,26 @@ class EventSender {
         kafkaProducer.flush();
         kafkaProducer.close(10000, TimeUnit.MILLISECONDS);
     }
-}
 
-class EventSenderCallback implements Callback {
+    private final static class EventSenderCallback implements Callback {
 
-    private final String routingKey;
-    private final EventRecord event;
+        private final String routingKey;
+        private final EventRecord event;
 
-    EventSenderCallback(String routingKey, EventRecord event) {
-        this.routingKey = routingKey;
-        this.event = event;
-    }
+        EventSenderCallback(String routingKey, EventRecord event) {
+            this.routingKey = routingKey;
+            this.event = event;
+        }
 
-    @Override
-    public void onCompletion(RecordMetadata metadata, Exception e) {
-        if (e != null) {
-            String message = String.format(
-                    "Error occurred when sending event: %s => %s",
-                    routingKey,
-                    event);
-            Log.error(message, e);
+        @Override
+        public void onCompletion(RecordMetadata metadata, Exception e) {
+            if (e != null) {
+                String message = String.format(
+                        "Error occurred when sending event: %s => %s",
+                        routingKey,
+                        event);
+                Log.error(message, e);
+            }
         }
     }
 }
