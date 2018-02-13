@@ -1,5 +1,8 @@
 package ru.kontur.airlock;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.util.concurrent.RateLimiter;
 import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -9,22 +12,35 @@ import ru.kontur.airlock.dto.EventGroup;
 import ru.kontur.airlock.dto.EventRecord;
 
 import java.util.Properties;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-class EventSender {
+public class EventSender {
     private final KafkaProducer<String, byte[]> kafkaProducer;
+    private final Cache<String, RateLimiter> rateLimiterCache;
+    private final int maxRequestsPerSecondPerRoutingKey;
 
-    EventSender(Properties kafkaProperties) {
-        kafkaProperties.setProperty(
-                "key.serializer",
-                "org.apache.kafka.common.serialization.ByteArraySerializer");
-        kafkaProperties.setProperty(
-                "value.serializer",
-                "org.apache.kafka.common.serialization.ByteArraySerializer");
-        this.kafkaProducer = new KafkaProducer<>(kafkaProperties);
+    public EventSender(KafkaProducer<String, byte[]> kafkaProducer, Properties appProperties) {
+        this.kafkaProducer = kafkaProducer;
+        maxRequestsPerSecondPerRoutingKey = Integer.parseInt(appProperties.getProperty("maxRequestsPerSecondPerRoutingKey", "100000"));
+        int rateLimiterCacheSize = Integer.parseInt(appProperties.getProperty("rateLimiterCacheSize", "10000"));
+
+        rateLimiterCache = CacheBuilder.newBuilder()
+                .maximumSize(rateLimiterCacheSize)
+                .expireAfterAccess(10,TimeUnit.MINUTES)
+                .build();
     }
 
-    void send(EventGroup eventGroup) {
+    public void send(EventGroup eventGroup)  {
+        final RateLimiter rateLimiter;
+        try {
+            rateLimiter = rateLimiterCache.get(eventGroup.eventRoutingKey, () -> RateLimiter.create(maxRequestsPerSecondPerRoutingKey));
+        } catch (ExecutionException e) {
+            Log.error(e.toString());
+            return;
+        }
+        rateLimiter.acquire();
         for (EventRecord record : eventGroup.eventRecords) {
             ProducerRecord<String, byte[]> pr = new ProducerRecord<>(
                     eventGroup.eventRoutingKey,

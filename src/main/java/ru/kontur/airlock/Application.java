@@ -2,6 +2,7 @@ package ru.kontur.airlock;
 
 import com.codahale.metrics.JmxReporter;
 import com.codahale.metrics.MetricRegistry;
+import org.apache.kafka.clients.producer.KafkaProducer;
 import org.rapidoid.log.Log;
 import org.rapidoid.net.Server;
 
@@ -30,7 +31,14 @@ public class Application {
             int port = Integer.parseInt(appProperties.getProperty("port", "6306"));
             boolean useInternalMeter = Integer.parseInt(appProperties.getProperty("useInternalMeter", "0")) > 0;
 
-            eventSender = new EventSender(producerProps);
+            producerProps.setProperty(
+                    "key.serializer",
+                    "org.apache.kafka.common.serialization.ByteArraySerializer");
+            producerProps.setProperty(
+                    "value.serializer",
+                    "org.apache.kafka.common.serialization.ByteArraySerializer");
+            final KafkaProducer<String, byte[]> kafkaProducer = new KafkaProducer<>(producerProps);
+            eventSender = new EventSender(kafkaProducer, appProperties);
             httpServer = new HttpServer(eventSender, getValidatorFactory(), useInternalMeter).listen(port);
 
             Log.info("Application started");
