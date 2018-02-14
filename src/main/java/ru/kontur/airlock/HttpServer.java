@@ -4,11 +4,14 @@ import static com.codahale.metrics.MetricRegistry.name;
 
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.Timer;
-import java.io.IOException;
-import java.util.ArrayList;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.util.concurrent.RateLimiter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Properties;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import org.rapidoid.buffer.Buf;
 import org.rapidoid.data.BufRange;
 import org.rapidoid.http.AbstractHttpServer;
@@ -20,10 +23,6 @@ import org.rapidoid.net.impl.RapidoidHelper;
 import ru.kontur.airlock.dto.AirlockMessage;
 import ru.kontur.airlock.dto.BinarySerializable;
 import ru.kontur.airlock.dto.EventGroup;
-
-import java.util.Properties;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 
 public class HttpServer extends AbstractHttpServer {
 
@@ -48,13 +47,16 @@ public class HttpServer extends AbstractHttpServer {
     private final Cache<String, RateLimiter> rateLimiterCache;
     private final int maxRequestsPerSecondPerApiKey;
 
-    public HttpServer(EventSender eventSender, ValidatorFactory validatorFactory, boolean useInternalMeter, Properties appProperties) throws IOException {
+    public HttpServer(EventSender eventSender, ValidatorFactory validatorFactory,
+            boolean useInternalMeter, Properties appProperties) throws IOException {
         this.eventSender = eventSender;
         this.validatorFactory = validatorFactory;
         metricsReporter =
                 useInternalMeter ? new MetricsReporter(3, eventMeter, requestSizeMeter) : null;
-        maxRequestsPerSecondPerApiKey = Integer.parseInt(appProperties.getProperty("maxRequestsPerSecondPerApiKey", "100000"));
-        int rateLimiterCacheSize = Integer.parseInt(appProperties.getProperty("rateLimiterCacheSize", "10000"));
+        maxRequestsPerSecondPerApiKey = Integer
+                .parseInt(appProperties.getProperty("maxRequestsPerSecondPerApiKey", "100000"));
+        int rateLimiterCacheSize = Integer
+                .parseInt(appProperties.getProperty("rateLimiterCacheSize", "10000"));
 
         rateLimiterCache = CacheBuilder.newBuilder()
                 .maximumSize(rateLimiterCacheSize)
@@ -124,7 +126,8 @@ public class HttpServer extends AbstractHttpServer {
             buf.get(req.body, body, 0);
             final RateLimiter rateLimiter;
             try {
-                rateLimiter = rateLimiterCache.get(apiKey, () -> RateLimiter.create(maxRequestsPerSecondPerApiKey));
+                rateLimiter = rateLimiterCache
+                        .get(apiKey, () -> RateLimiter.create(maxRequestsPerSecondPerApiKey));
                 rateLimiter.acquire();
             } catch (ExecutionException e) {
                 getErrorMeter("ratelimiter").mark();

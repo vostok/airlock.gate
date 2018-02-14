@@ -1,14 +1,8 @@
 import org.apache.http.HttpResponse;
-import org.apache.http.client.fluent.Request;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
 import org.apache.http.HttpStatus;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import org.apache.http.client.fluent.Request;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class HttpServerTest extends HttpServerTestBase {
 
