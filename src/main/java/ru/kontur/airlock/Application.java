@@ -2,16 +2,22 @@ package ru.kontur.airlock;
 
 import com.codahale.metrics.JmxReporter;
 import com.codahale.metrics.MetricRegistry;
-import org.rapidoid.log.Log;
-import org.rapidoid.net.Server;
-
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import org.rapidoid.log.Log;
+import org.rapidoid.net.Server;
 
 public class Application {
+
     private static Server httpServer;
     private static EventSender eventSender;
     static final MetricRegistry metricRegistry = new MetricRegistry();
@@ -28,10 +34,12 @@ public class Application {
             Properties producerProps = getProperties("producer.properties");
             Properties appProperties = getProperties("app.properties");
             int port = Integer.parseInt(appProperties.getProperty("port", "6306"));
-            boolean useInternalMeter = Integer.parseInt(appProperties.getProperty("useInternalMeter", "0")) > 0;
+            boolean useInternalMeter =
+                    Integer.parseInt(appProperties.getProperty("useInternalMeter", "0")) > 0;
 
             eventSender = new EventSender(producerProps);
-            httpServer = new HttpServer(eventSender, getValidatorFactory(), useInternalMeter).listen(port);
+            httpServer = new HttpServer(eventSender, getValidatorFactory(), useInternalMeter)
+                    .listen(port);
 
             Log.info("Application started");
         } catch (Exception ex) {
@@ -54,7 +62,8 @@ public class Application {
         Properties apiKeysProps = Application.getProperties("apikeys.properties");
         Map<String, String[]> apiKeysToRoutingKeyPatterns = new HashMap<>();
         for (String key : apiKeysProps.stringPropertyNames()) {
-            String[] routingKeyPatterns = apiKeysProps.getProperty(key, "").trim().split("\\s*,\\s*");
+            String[] routingKeyPatterns = apiKeysProps.getProperty(key, "").trim()
+                    .split("\\s*,\\s*");
             apiKeysToRoutingKeyPatterns.put(key, routingKeyPatterns);
         }
         return new ValidatorFactory(apiKeysToRoutingKeyPatterns);

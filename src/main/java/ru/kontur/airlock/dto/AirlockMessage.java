@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class AirlockMessage implements BinarySerializable {
+
     private static final short version = 1;
     public List<EventGroup> eventGroups = new ArrayList<>();
 

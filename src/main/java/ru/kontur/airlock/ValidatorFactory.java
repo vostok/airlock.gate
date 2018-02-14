@@ -4,7 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ValidatorFactory {
-    private final HashMap<String, String[]> apiKeysToPatterns = new HashMap<>();
+
+    private final Map<String, String[]> apiKeysToPatterns = new HashMap<>();
 
     public ValidatorFactory(Map<String, String[]> apiKeysToRoutingKeyPatterns) {
         for (String key : apiKeysToRoutingKeyPatterns.keySet()) {
