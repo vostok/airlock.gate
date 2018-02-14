@@ -25,7 +25,7 @@ public class ThrottlingTest extends HttpServerTestBase {
 
     @Parameters
     public static Collection<Object[]> data() {
-        Object[][] data = new Object[][]{{150, 1}, {5, 0}, {250, 2}};
+        Object[][] data = new Object[][]{{120, 1}, {5, 0}, {220, 2}};
         return Arrays.asList(data);
     }
 
@@ -44,7 +44,7 @@ public class ThrottlingTest extends HttpServerTestBase {
         }
         stopwatch.stop();
         final long elapsed = stopwatch.elapsed(TimeUnit.SECONDS);
-        Assert.assertTrue("elapsed too small: " + elapsed, elapsed == secondsElapsed);
+        Assert.assertTrue("unexpected elapsed: " + elapsed + ", expected " + secondsElapsed, elapsed == secondsElapsed);
     }
 
 }
