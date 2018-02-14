@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 public final class EventRecord implements BinarySerializable {
+
     public long timestamp;
     public byte[] data;
 

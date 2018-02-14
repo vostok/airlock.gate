@@ -1,5 +1,7 @@
 package ru.kontur.airlock;
 
+import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -8,10 +10,8 @@ import org.rapidoid.log.Log;
 import ru.kontur.airlock.dto.EventGroup;
 import ru.kontur.airlock.dto.EventRecord;
 
-import java.util.Properties;
-import java.util.concurrent.TimeUnit;
-
 public class EventSender {
+
     private final KafkaProducer<String, byte[]> kafkaProducer;
 
     EventSender(Properties kafkaProperties) {
@@ -32,7 +32,8 @@ public class EventSender {
                     record.timestamp,
                     null,
                     record.data);
-            EventSenderCallback callback = new EventSenderCallback(eventGroup.eventRoutingKey, record);
+            EventSenderCallback callback = new EventSenderCallback(eventGroup.eventRoutingKey,
+                    record);
             kafkaProducer.send(pr, callback);
         }
     }

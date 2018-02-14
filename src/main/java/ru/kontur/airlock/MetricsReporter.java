@@ -1,14 +1,14 @@
 package ru.kontur.airlock;
 
 import com.codahale.metrics.Meter;
-import org.rapidoid.log.Log;
-
 import java.text.DecimalFormat;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import org.rapidoid.log.Log;
 
 final class MetricsReporter {
+
     private double lastThroughput = 0;
     private long lastThroughputBytes = 0;
 
@@ -17,7 +17,8 @@ final class MetricsReporter {
 
     MetricsReporter(int reportingIntervalSeconds, Meter eventMeter, Meter requestSizeMeter) {
         if (reportingIntervalSeconds <= 0) {
-            throw new IllegalArgumentException("reportingIntervalSeconds cannot be less than or equal to zero");
+            throw new IllegalArgumentException(
+                    "reportingIntervalSeconds cannot be less than or equal to zero");
         }
         ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
         executor.scheduleAtFixedRate(() -> {
@@ -26,10 +27,14 @@ final class MetricsReporter {
                 long prevRequestSizeCount = lastRequestSizeCount;
                 lastEventCount = eventMeter.getCount();
                 lastRequestSizeCount = requestSizeMeter.getCount();
-                lastThroughput = ((double) (lastEventCount - prevEventCount)) / reportingIntervalSeconds;
-                lastThroughputBytes = (lastRequestSizeCount - prevRequestSizeCount) / reportingIntervalSeconds;
+                lastThroughput =
+                        ((double) (lastEventCount - prevEventCount)) / reportingIntervalSeconds;
+                lastThroughputBytes =
+                        (lastRequestSizeCount - prevRequestSizeCount) / reportingIntervalSeconds;
             }
-            Log.info(String.format("Thr-put: %s events/sec; Thr-put: %s Kb/sec", getLastThroughput(), getLastThroughputKb()));
+            Log.info(
+                    String.format("Thr-put: %s events/sec; Thr-put: %s Kb/sec", getLastThroughput(),
+                            getLastThroughputKb()));
         }, 0, reportingIntervalSeconds, TimeUnit.SECONDS);
     }
 

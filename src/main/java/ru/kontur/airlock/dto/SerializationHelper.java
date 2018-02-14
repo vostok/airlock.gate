@@ -10,18 +10,23 @@ import java.util.ArrayList;
 import java.util.List;
 
 final class SerializationHelper {
-    private SerializationHelper() {}
+
+    private SerializationHelper() {
+    }
 
     private static void writeInt(OutputStream stream, int value) throws IOException {
-        stream.write(ByteBuffer.allocate(Integer.BYTES).order(ByteOrder.LITTLE_ENDIAN).putInt(value).array());
+        stream.write(ByteBuffer.allocate(Integer.BYTES).order(ByteOrder.LITTLE_ENDIAN).putInt(value)
+                .array());
     }
 
     static void writeLong(OutputStream stream, long value) throws IOException {
-        stream.write(ByteBuffer.allocate(Long.BYTES).order(ByteOrder.LITTLE_ENDIAN).putLong(value).array());
+        stream.write(ByteBuffer.allocate(Long.BYTES).order(ByteOrder.LITTLE_ENDIAN).putLong(value)
+                .array());
     }
 
     static void writeShort(OutputStream stream, short value) throws IOException {
-        stream.write(ByteBuffer.allocate(Short.BYTES).order(ByteOrder.LITTLE_ENDIAN).putShort(value).array());
+        stream.write(ByteBuffer.allocate(Short.BYTES).order(ByteOrder.LITTLE_ENDIAN).putShort(value)
+                .array());
     }
 
     static void writeBytes(OutputStream stream, byte[] value) throws IOException {
@@ -34,7 +39,8 @@ final class SerializationHelper {
         writeBytes(stream, bytes);
     }
 
-    static <T extends BinarySerializable> void writeList(OutputStream stream, List<T> list) throws IOException {
+    static <T extends BinarySerializable> void writeList(OutputStream stream, List<T> list)
+            throws IOException {
         if (list == null || list.size() == 0) {
             writeInt(stream, 0);
             return;
@@ -77,11 +83,14 @@ final class SerializationHelper {
 
     private static void readFixedBytes(InputStream stream, byte[] arr) throws IOException {
         int size = stream.read(arr);
-        if (size < arr.length)
-            throw new IOException("Could not read " + arr.length + " bytes. Was " + size + " only.");
+        if (size < arr.length) {
+            throw new IOException(
+                    "Could not read " + arr.length + " bytes. Was " + size + " only.");
+        }
     }
 
-    static <T extends BinarySerializable> List<T> readList(InputStream stream, Class<T> clazz) throws IOException {
+    static <T extends BinarySerializable> List<T> readList(InputStream stream, Class<T> clazz)
+            throws IOException {
         int size = readInt(stream);
         ArrayList<T> list = new ArrayList<>();
         for (int i = 0; i < size; i++) {
@@ -91,7 +100,8 @@ final class SerializationHelper {
         return list;
     }
 
-    static <T extends BinarySerializable> T read(InputStream stream, Class<T> clazz) throws IOException {
+    static <T extends BinarySerializable> T read(InputStream stream, Class<T> clazz)
+            throws IOException {
         T item;
 
         try {
