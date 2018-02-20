@@ -77,9 +77,14 @@ public class Application {
             programDataDir = "/etc";
         }
         File file = Paths.get(programDataDir, "vostok", "airlock-gate", configName).toFile();
-        return file.exists() ?
-                new FileInputStream(file) :
-                Application.class.getClassLoader().getResourceAsStream(configName);
+
+        if (file.exists()) {
+            Log.info("Using configuration from file " + file.getAbsolutePath());
+            return new FileInputStream(file);
+        } else {
+            Log.info("Using configuration from resource " + configName);
+            return Application.class.getClassLoader().getResourceAsStream(configName);
+        }
     }
 
     private static Properties getProperties(String configName) throws IOException {
