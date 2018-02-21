@@ -2,6 +2,8 @@ language: java
 jdk:
 - oraclejdk8
 cache: false
+git:
+  depth: false
 sudo: true
 script:
   - make travis-build-packages
