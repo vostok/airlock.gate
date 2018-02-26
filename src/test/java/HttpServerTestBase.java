@@ -1,6 +1,7 @@
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Properties;
 import org.apache.http.HttpResponse;
@@ -58,6 +59,11 @@ public class HttpServerTestBase {
 
     protected void testSend(AirlockMessage message, int expectedStatus, String apiKey)
             throws Exception {
+        int statusCode = sendMessage(message, apiKey);
+        Assert.assertEquals(expectedStatus, statusCode);
+    }
+
+    protected int sendMessage(AirlockMessage message, String apiKey) throws IOException {
         Request request = Request.Post("http://localhost:" + port + "/send")
                 .connectTimeout(10000)
                 .socketTimeout(5000);
@@ -67,8 +73,7 @@ public class HttpServerTestBase {
         if (apiKey != null) {
             request.addHeader("x-apikey", apiKey);
         }
-        HttpResponse response = request.execute().returnResponse();
-        Assert.assertEquals(expectedStatus, response.getStatusLine().getStatusCode());
+        return request.execute().returnResponse().getStatusLine().getStatusCode();
     }
 
 }

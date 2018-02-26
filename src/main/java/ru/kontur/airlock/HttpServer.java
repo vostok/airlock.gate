@@ -128,7 +128,10 @@ public class HttpServer extends AbstractHttpServer {
             try {
                 rateLimiter = rateLimiterCache
                         .get(apiKey, () -> RateLimiter.create(maxRequestsPerSecondPerApiKey));
-                rateLimiter.acquire();
+                if (!rateLimiter.tryAcquire()) {
+                    getErrorMeter("too-much-requests").mark();
+                    return error(ctx, isKeepAlive, "too much requests per apikey", 429, apiKey);
+                }
             } catch (ExecutionException e) {
                 getErrorMeter("ratelimiter").mark();
                 Log.warn(e.toString() + ", apikey=" + apiKey);
