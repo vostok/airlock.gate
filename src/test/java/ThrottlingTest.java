@@ -51,7 +51,7 @@ public class ThrottlingTest extends HttpServerTestBase {
         stopwatch.stop();
         Assert.assertTrue("unexpected successCount: " + successCount + ", minSuccessCount=" + minSuccessCount, successCount > 0 && successCount <= minSuccessCount );
         final long elapsed = stopwatch.elapsed(TimeUnit.SECONDS);
-        Assert.assertTrue("unexpected elapsed: " + elapsed + ", expected 1 sec or lower", elapsed < 1);
+        Assert.assertTrue("unexpected elapsed: " + elapsed + ", expected 1 sec or lower", elapsed <= 1);
         Thread.sleep(3000);
     }
 
