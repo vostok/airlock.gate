@@ -24,6 +24,7 @@ public class HttpServer extends AbstractHttpServer {
     private static final byte[] URI_ROOT = "/".getBytes();
     private static final byte[] URI_PING = "/ping".getBytes();
     private static final byte[] URI_SEND = "/send".getBytes();
+    private static final byte[] URI_SHUTDOWN = "/shutdown".getBytes();
     private static final byte[] URI_THROUGHPUT = "/th"
             .getBytes();      // Yandex.Tank report metrics, not used in production
     private static final byte[] URI_THROUGHPUT_KB = "/thkb"
@@ -77,6 +78,16 @@ public class HttpServer extends AbstractHttpServer {
                 return error(ctx, isKeepAlive, "Method not allowed", 405, null);
             }
             return ok(ctx, isKeepAlive, "Gate is running".getBytes(), MediaType.TEXT_PLAIN);
+        } else if (matches(buf, req.path, URI_SHUTDOWN)) {
+            Log.info("Shutdown via http request");
+            new Thread(() -> {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                }
+                Runtime.getRuntime().exit(0);
+            }).start();;
+            return ok(ctx, isKeepAlive, "Gate is shutting down".getBytes(), MediaType.TEXT_PLAIN);
         }
         return HttpStatus.NOT_FOUND;
     }
