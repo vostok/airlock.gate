@@ -32,7 +32,7 @@ public class ThrottlingTest extends HttpServerTestBase {
 
     @Parameters
     public static Collection<Object[]> data() {
-        Object[][] data = new Object[][]{{15, 10, 14, 1}, {5, 5, 5, 1}, {50, 10, 15, 1}, {50, 10, 15, 2}, {5, 9, 10, 2}};
+        Object[][] data = new Object[][]{{15, 10, 14, 1}, {5, 5, 5, 1}, {50, 10, 15, 1}, {50, 10, 25, 2}, {5, 9, 10, 2}};
         return Arrays.asList(data);
     }
 
