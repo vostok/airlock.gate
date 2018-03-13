@@ -9,9 +9,13 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.util.concurrent.RateLimiter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import javax.naming.SizeLimitExceededException;
 import org.rapidoid.buffer.Buf;
 import org.rapidoid.data.BufRange;
 import org.rapidoid.http.AbstractHttpServer;
@@ -44,24 +48,42 @@ public class HttpServer extends AbstractHttpServer {
     private final Timer requests = Application.metricRegistry
             .timer(name(HttpServer.class, "requests"));
     private final MetricsReporter metricsReporter;
-    private final Cache<String, RateLimiter> rateLimiterCache;
-    private final int maxRequestsPerSecondPerApiKey;
+    private final Cache<String, RateInfo> rateInfoCache;
+    private final long bandwidthBytes;
+    private final Map<String, Double> bandwidthWeights;
+    private final RateLimiter bandwidthRateLimiter;
+
+    class RateInfo {
+        public RateLimiter rateLimiter;
+        public double weight;
+
+        public RateInfo(RateLimiter rateLimiter, double weight) {
+            this.rateLimiter = rateLimiter;
+            this.weight = weight;
+        }
+    }
 
     public HttpServer(EventSender eventSender, ValidatorFactory validatorFactory,
-            boolean useInternalMeter, Properties appProperties) throws IOException {
+            boolean useInternalMeter, Properties appProperties,
+            Properties bandwidthWeights) throws IOException {
         this.eventSender = eventSender;
         this.validatorFactory = validatorFactory;
         metricsReporter =
                 useInternalMeter ? new MetricsReporter(3, eventMeter, requestSizeMeter) : null;
-        maxRequestsPerSecondPerApiKey = Integer
-                .parseInt(appProperties.getProperty("maxRequestsPerSecondPerApiKey", "100000"));
+        bandwidthBytes = Math.round(Double
+                .parseDouble(appProperties.getProperty("bandwidthMb", "1000"))*1024*1024);
+        this.bandwidthWeights = new HashMap<>();
+        for (final String name: bandwidthWeights.stringPropertyNames())
+            this.bandwidthWeights.put(name, Double.parseDouble(bandwidthWeights.getProperty(name)));
+
         int rateLimiterCacheSize = Integer
                 .parseInt(appProperties.getProperty("rateLimiterCacheSize", "10000"));
 
-        rateLimiterCache = CacheBuilder.newBuilder()
+        rateInfoCache = CacheBuilder.newBuilder()
                 .maximumSize(rateLimiterCacheSize)
                 .expireAfterAccess(10, TimeUnit.MINUTES)
                 .build();
+        bandwidthRateLimiter = RateLimiter.create(bandwidthBytes);
     }
 
     @Override
@@ -122,21 +144,15 @@ public class HttpServer extends AbstractHttpServer {
                 getErrorMeter("empty-body").mark();
                 return error(ctx, isKeepAlive, "Request body is empty", 400, apiKey);
             }
-            byte[] body = new byte[req.body.length];
-            buf.get(req.body, body, 0);
-            final RateLimiter rateLimiter;
+            final int bodyLength = req.body.length;
             try {
-                rateLimiter = rateLimiterCache
-                        .get(apiKey, () -> RateLimiter.create(maxRequestsPerSecondPerApiKey));
-                if (!rateLimiter.tryAcquire()) {
-                    getErrorMeter("too-much-requests").mark();
-                    return error(ctx, isKeepAlive, "too much requests per apikey", 429, apiKey);
-                }
-            } catch (ExecutionException e) {
-                getErrorMeter("ratelimiter").mark();
-                Log.warn(e.toString() + ", apikey=" + apiKey);
+                checkLimits(apiKey, bodyLength);
+            } catch (SizeLimitExceededException e) {
+                return error(ctx, isKeepAlive, e.getMessage(), 429, apiKey);
             }
 
+            byte[] body = new byte[bodyLength];
+            buf.get(req.body, body, 0);
             AirlockMessage message;
             try {
                 message = BinarySerializable.fromByteArray(body, AirlockMessage.class);
@@ -168,7 +184,7 @@ public class HttpServer extends AbstractHttpServer {
                 getRoutingKeyMeter(eventGroup.eventRoutingKey).mark(groupSize);
             }
             eventMeter.mark(eventCount);
-            requestSizeMeter.mark(req.body.length);
+            requestSizeMeter.mark(bodyLength);
 
             if (validEventGroups.size() < message.eventGroups.size()) {
                 getErrorMeter("filtered-partial").mark();
@@ -180,6 +196,41 @@ public class HttpServer extends AbstractHttpServer {
             }
         } finally {
             timerContext.stop();
+        }
+    }
+
+    private void checkLimits(String apiKey, int bodyLength) throws SizeLimitExceededException {
+        final RateInfo rateInfo;
+        try {
+            double weight = bandwidthWeights.getOrDefault(apiKey, 1D);
+            final boolean[] addedRateInfo = {false}; //see https://stackoverflow.com/questions/34865383/variable-used-in-lambda-expression-should-be-final-or-effectively-final
+            rateInfo = rateInfoCache
+                    .get(apiKey, () -> {
+                        addedRateInfo[0] = true;
+                        return new RateInfo(RateLimiter.create(bandwidthBytes), weight);
+                    });
+            if (addedRateInfo[0]) {
+                double weightSum = 0;
+                final Collection<RateInfo> rateInfos = rateInfoCache.asMap().values();
+                for (RateInfo curInfo : rateInfos) {
+                    weightSum += curInfo.weight;
+                }
+                for (RateInfo curInfo : rateInfos) {
+                    if (weightSum <= 0) {
+                        curInfo.rateLimiter.setRate(1D / rateInfos.size() * bandwidthBytes);
+                    } else {
+                        curInfo.rateLimiter.setRate(curInfo.weight / weightSum * bandwidthBytes);
+                    }
+                }
+            }
+            final boolean apikeyAcquireResult = rateInfo.rateLimiter.tryAcquire(bodyLength);
+            if (!bandwidthRateLimiter.tryAcquire(bodyLength) && !apikeyAcquireResult) {
+                getErrorMeter("too-much-traffic").mark();
+                throw new SizeLimitExceededException("too much traffic per apikey, max rate="+rateInfo.rateLimiter.getRate());
+            }
+        } catch (ExecutionException e) {
+            getErrorMeter("ratelimiter").mark();
+            Log.warn(e.toString() + ", apikey=" + apiKey);
         }
     }
 

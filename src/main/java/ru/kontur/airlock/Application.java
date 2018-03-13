@@ -27,19 +27,19 @@ public class Application {
             Log.info("Starting application");
 
             org.apache.log4j.PropertyConfigurator.configure(getProperties("log4j.properties"));
-            org.apache.log4j.BasicConfigurator.configure();
 
             JmxReporter.forRegistry(metricRegistry).build().start();
 
             Properties producerProps = getProperties("producer.properties");
             Properties appProperties = getProperties("app.properties");
+            Properties bandwidthWeights = getProperties("apikeysBandwidthWeights.properties");
             int port = Integer.parseInt(appProperties.getProperty("port", "6306"));
             boolean useInternalMeter =
                     Integer.parseInt(appProperties.getProperty("useInternalMeter", "0")) > 0;
 
             eventSender = new EventSender(producerProps);
             httpServer = new HttpServer(eventSender, getValidatorFactory(), useInternalMeter,
-                    appProperties).listen(port);
+                    appProperties, bandwidthWeights).listen(port);
 
             Log.info("Application started");
         } catch (Exception ex) {
