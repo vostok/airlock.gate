@@ -40,23 +40,7 @@ public class Application {
             Properties appProperties = getProperties("app.properties");
             Properties bandwidthWeights = getProperties("apikeysBandwidthWeights.properties");
 
-            final String graphiteUrl = appProperties.getProperty("graphiteUrl", "graphite:2003");
-            final String[] splittedGraphiteUrl = graphiteUrl.split(":");
-            if (splittedGraphiteUrl.length < 2) {
-                Log.error("invalid graphite url " + graphiteUrl);
-            } else {
-                final int graphitePort = Integer.parseInt(splittedGraphiteUrl[1]);
-                final InetSocketAddress address = new InetSocketAddress(splittedGraphiteUrl[0], graphitePort);
-                final Graphite graphite = new Graphite(address);
-                final GraphiteReporter reporter = GraphiteReporter.forRegistry(metricRegistry)
-                        .prefixedWith("airlock")
-                        //.convertRatesTo(TimeUnit.SECONDS)
-                        .convertDurationsTo(TimeUnit.MILLISECONDS)
-                        //.filter(MetricFilter.ALL)
-                        .build(graphite);
-                reporter.start(10, TimeUnit.SECONDS);
-                Log.info("Started graphite reporter " + address.toString());
-            }
+            startGraphiteReporter(appProperties);
 
             int port = Integer.parseInt(appProperties.getProperty("port", "6306"));
             boolean useInternalMeter =
@@ -73,6 +57,29 @@ public class Application {
 
         Runtime.getRuntime().addShutdownHook(new Thread(Application::shutdown));
         new BufferedReader(new InputStreamReader(System.in)).readLine();
+    }
+
+    private static void startGraphiteReporter(Properties appProperties) {
+        final String graphiteUrl = appProperties.getProperty("graphiteUrl", "graphite.skbkontur.ru:80");
+        final String[] splittedGraphiteUrl = graphiteUrl.split(":");
+        if (splittedGraphiteUrl.length < 2) {
+            Log.error("invalid graphite url " + graphiteUrl);
+        } else {
+            final int graphitePort = Integer.parseInt(splittedGraphiteUrl[1]);
+            final InetSocketAddress address = new InetSocketAddress(splittedGraphiteUrl[0], graphitePort);
+            final Graphite graphite = new Graphite(address);
+            final String graphitePrefix = appProperties
+                    .getProperty("graphitePrefix", "vostok.test.airlock");
+            final GraphiteReporter reporter = GraphiteReporter.forRegistry(metricRegistry)
+                    .prefixedWith(
+                            graphitePrefix)
+                    //.convertRatesTo(TimeUnit.SECONDS)
+                    //.convertDurationsTo(TimeUnit.MILLISECONDS)
+                    //.filter(MetricFilter.ALL)
+                    .build(graphite);
+            reporter.start(1, TimeUnit.MINUTES);
+            Log.info("Started graphite reporter at " + address.toString() + " with prefix '" + graphitePrefix + "'");
+        }
     }
 
     private static void shutdown() {
