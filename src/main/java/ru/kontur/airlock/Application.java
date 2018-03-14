@@ -1,7 +1,11 @@
 package ru.kontur.airlock;
 
 import com.codahale.metrics.JmxReporter;
+import com.codahale.metrics.MetricFilter;
 import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.MetricRegistryListener;
+import com.codahale.metrics.graphite.Graphite;
+import com.codahale.metrics.graphite.GraphiteReporter;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -9,10 +13,12 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.InetSocketAddress;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 import org.rapidoid.log.Log;
 import org.rapidoid.net.Server;
 
@@ -28,11 +34,30 @@ public class Application {
 
             org.apache.log4j.PropertyConfigurator.configure(getProperties("log4j.properties"));
 
-            JmxReporter.forRegistry(metricRegistry).build().start();
+            //JmxReporter.forRegistry(metricRegistry).build().start();
 
             Properties producerProps = getProperties("producer.properties");
             Properties appProperties = getProperties("app.properties");
             Properties bandwidthWeights = getProperties("apikeysBandwidthWeights.properties");
+
+            final String graphiteUrl = appProperties.getProperty("graphiteUrl", "graphite:2003");
+            final String[] splittedGraphiteUrl = graphiteUrl.split(":");
+            if (splittedGraphiteUrl.length < 2) {
+                Log.error("invalid graphite url " + graphiteUrl);
+            } else {
+                final int graphitePort = Integer.parseInt(splittedGraphiteUrl[1]);
+                final InetSocketAddress address = new InetSocketAddress(splittedGraphiteUrl[0], graphitePort);
+                final Graphite graphite = new Graphite(address);
+                final GraphiteReporter reporter = GraphiteReporter.forRegistry(metricRegistry)
+                        .prefixedWith("airlock")
+                        //.convertRatesTo(TimeUnit.SECONDS)
+                        .convertDurationsTo(TimeUnit.MILLISECONDS)
+                        //.filter(MetricFilter.ALL)
+                        .build(graphite);
+                reporter.start(10, TimeUnit.SECONDS);
+                Log.info("Started graphite reporter " + address.toString());
+            }
+
             int port = Integer.parseInt(appProperties.getProperty("port", "6306"));
             boolean useInternalMeter =
                     Integer.parseInt(appProperties.getProperty("useInternalMeter", "0")) > 0;

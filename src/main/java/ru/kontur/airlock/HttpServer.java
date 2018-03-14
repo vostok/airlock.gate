@@ -43,11 +43,11 @@ public class HttpServer extends AbstractHttpServer {
     private final EventSender eventSender;
     private final ValidatorFactory validatorFactory;
     private final Meter requestSizeMeter = Application.metricRegistry
-            .meter(name(HttpServer.class, "request-size"));
+            .meter(name( "request-size"));
     private final Meter eventMeter = Application.metricRegistry
-            .meter(name(HttpServer.class, "events", "total"));
+            .meter(name( "events", "total"));
     private final Timer requests = Application.metricRegistry
-            .timer(name(HttpServer.class, "requests"));
+            .timer(name( "requests"));
     private final MetricsReporter metricsReporter;
     private final Cache<String, RateInfo> rateInfoCache;
     private final long bandwidthBytes;
@@ -244,11 +244,11 @@ public class HttpServer extends AbstractHttpServer {
 
     private Meter getRoutingKeyMeter(String routingKey) {
         return Application.metricRegistry
-                .meter(name(HttpServer.class, "events", routingKey.replace('.', '-')));
+                .meter(name( "events", routingKey.replace('.', '-')));
     }
 
     private Meter getErrorMeter(String errorType) {
-        return Application.metricRegistry.meter(name(HttpServer.class, "errors", errorType));
+        return Application.metricRegistry.meter(name( "errors", errorType));
     }
 
     private ArrayList<EventGroup> filterEventGroupsForApiKey(Validator validator,
