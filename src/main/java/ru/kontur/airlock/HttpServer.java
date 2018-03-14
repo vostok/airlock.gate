@@ -6,6 +6,7 @@ import com.codahale.metrics.Meter;
 import com.codahale.metrics.Timer;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.RemovalListener;
 import com.google.common.util.concurrent.RateLimiter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -72,6 +73,8 @@ public class HttpServer extends AbstractHttpServer {
                 useInternalMeter ? new MetricsReporter(3, eventMeter, requestSizeMeter) : null;
         bandwidthBytes = Math.round(Double
                 .parseDouble(appProperties.getProperty("bandwidthMb", "1000"))*1024*1024);
+        final long rateInfoExpirationSeconds = Long
+                .parseLong(appProperties.getProperty("rateInfoExpirationSeconds", "600"));
         this.bandwidthWeights = new HashMap<>();
         for (final String name: bandwidthWeights.stringPropertyNames())
             this.bandwidthWeights.put(name, Double.parseDouble(bandwidthWeights.getProperty(name)));
@@ -81,7 +84,8 @@ public class HttpServer extends AbstractHttpServer {
 
         rateInfoCache = CacheBuilder.newBuilder()
                 .maximumSize(rateLimiterCacheSize)
-                .expireAfterAccess(10, TimeUnit.MINUTES)
+                .expireAfterAccess(rateInfoExpirationSeconds, TimeUnit.SECONDS)
+                .removalListener((RemovalListener<String, RateInfo>) removal -> updateRateLimits())
                 .build();
         bandwidthRateLimiter = RateLimiter.create(bandwidthBytes);
     }
@@ -210,18 +214,7 @@ public class HttpServer extends AbstractHttpServer {
                         return new RateInfo(RateLimiter.create(bandwidthBytes), weight);
                     });
             if (addedRateInfo[0]) {
-                double weightSum = 0;
-                final Collection<RateInfo> rateInfos = rateInfoCache.asMap().values();
-                for (RateInfo curInfo : rateInfos) {
-                    weightSum += curInfo.weight;
-                }
-                for (RateInfo curInfo : rateInfos) {
-                    if (weightSum <= 0) {
-                        curInfo.rateLimiter.setRate(1D / rateInfos.size() * bandwidthBytes);
-                    } else {
-                        curInfo.rateLimiter.setRate(curInfo.weight / weightSum * bandwidthBytes);
-                    }
-                }
+                updateRateLimits();
             }
             final boolean apikeyAcquireResult = rateInfo.rateLimiter.tryAcquire(bodyLength);
             if (!bandwidthRateLimiter.tryAcquire(bodyLength) && !apikeyAcquireResult) {
@@ -231,6 +224,21 @@ public class HttpServer extends AbstractHttpServer {
         } catch (ExecutionException e) {
             getErrorMeter("ratelimiter").mark();
             Log.warn(e.toString() + ", apikey=" + apiKey);
+        }
+    }
+
+    private void updateRateLimits() {
+        double weightSum = 0;
+        final Collection<RateInfo> rateInfos = rateInfoCache.asMap().values();
+        for (RateInfo curInfo : rateInfos) {
+            weightSum += curInfo.weight;
+        }
+        for (RateInfo curInfo : rateInfos) {
+            if (weightSum <= 0) {
+                curInfo.rateLimiter.setRate(1D / rateInfos.size() * bandwidthBytes);
+            } else {
+                curInfo.rateLimiter.setRate(curInfo.weight / weightSum * bandwidthBytes);
+            }
         }
     }
 
