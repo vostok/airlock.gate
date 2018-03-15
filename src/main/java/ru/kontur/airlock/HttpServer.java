@@ -2,8 +2,11 @@ package ru.kontur.airlock;
 
 import static com.codahale.metrics.MetricRegistry.name;
 
+import com.codahale.metrics.Clock;
+import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Meter;
-import com.codahale.metrics.Timer;
+import com.codahale.metrics.SlidingTimeWindowArrayReservoir;
+import com.codahale.metrics.SlidingTimeWindowReservoir;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.RemovalListener;
@@ -46,8 +49,9 @@ public class HttpServer extends AbstractHttpServer {
             .meter(name( "request-size"));
     private final Meter eventMeter = Application.metricRegistry
             .meter(name( "events", "total"));
-    private final Timer requests = Application.metricRegistry
-            .timer(name( "requests"));
+    private final Histogram requests = Application.metricRegistry
+            .histogram(name("requests"), () -> new Histogram(new AutoResettableUniformReservoir()));
+            //.histogram(name("requests"), () -> new Histogram(new SlidingTimeWindowArrayReservoir(1,TimeUnit.MINUTES)));
     private final MetricsReporter metricsReporter;
     private final Cache<String, RateInfo> rateInfoCache;
     private final long bandwidthBytes;
@@ -135,7 +139,8 @@ public class HttpServer extends AbstractHttpServer {
     }
 
     private HttpStatus send(Channel ctx, Buf buf, RapidoidHelper req, boolean isKeepAlive) {
-        final Timer.Context timerContext = requests.time();
+        final Clock clock = Clock.defaultClock();
+        long startTime = clock.getTick();
         try {
             String apiKey = getHeader(buf, req, "x-apikey");
             if (apiKey == null || apiKey.trim().isEmpty()) {
@@ -199,7 +204,8 @@ public class HttpServer extends AbstractHttpServer {
                 return ok(ctx, isKeepAlive, new byte[0], MediaType.TEXT_PLAIN);
             }
         } finally {
-            timerContext.stop();
+            long elapsed = clock.getTick() - startTime;
+            requests.update(elapsed);
         }
     }
 
