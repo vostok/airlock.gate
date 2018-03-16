@@ -77,7 +77,9 @@ public class Application {
                     //.convertDurationsTo(TimeUnit.MILLISECONDS)
                     //.filter(MetricFilter.ALL)
                     .build(graphite);
-            reporter.start(1, TimeUnit.MINUTES);
+            final int graphiteRetentionSeconds = Integer.parseInt(appProperties
+                    .getProperty("graphiteRetentionSeconds", "60"));
+            reporter.start(graphiteRetentionSeconds, TimeUnit.SECONDS);
             Log.info("Started graphite reporter at " + address.toString() + " with prefix '" + graphitePrefix + "'");
         }
     }
