@@ -60,7 +60,7 @@ public class Application {
     }
 
     private static void startGraphiteReporter(Properties appProperties) {
-        final String graphiteUrl = appProperties.getProperty("graphiteUrl", "graphite.skbkontur.ru:80");
+        final String graphiteUrl = appProperties.getProperty("graphiteUrl", "graphite:2003");
         final String[] splittedGraphiteUrl = graphiteUrl.split(":");
         if (splittedGraphiteUrl.length < 2) {
             Log.error("invalid graphite url " + graphiteUrl);
@@ -71,8 +71,7 @@ public class Application {
             final String graphitePrefix = appProperties
                     .getProperty("graphitePrefix", "vostok.test.airlock");
             final GraphiteReporter reporter = GraphiteReporter.forRegistry(metricRegistry)
-                    .prefixedWith(
-                            graphitePrefix)
+                    .prefixedWith(graphitePrefix)
                     //.convertRatesTo(TimeUnit.SECONDS)
                     //.convertDurationsTo(TimeUnit.MILLISECONDS)
                     //.filter(MetricFilter.ALL)

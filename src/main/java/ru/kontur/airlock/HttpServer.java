@@ -49,9 +49,7 @@ public class HttpServer extends AbstractHttpServer {
             .meter(name( "request-size"));
     private final Meter eventMeter = Application.metricRegistry
             .meter(name( "events", "total"));
-    private final Histogram requests = Application.metricRegistry
-            .histogram(name("requests"), () -> new Histogram(new AutoResettableUniformReservoir()));
-            //.histogram(name("requests"), () -> new Histogram(new SlidingTimeWindowArrayReservoir(1,TimeUnit.MINUTES)));
+    private final Histogram requests;
     private final MetricsReporter metricsReporter;
     private final Cache<String, RateInfo> rateInfoCache;
     private final long bandwidthBytes;
@@ -73,6 +71,11 @@ public class HttpServer extends AbstractHttpServer {
             Properties bandwidthWeights) throws IOException {
         this.eventSender = eventSender;
         this.validatorFactory = validatorFactory;
+        final int graphiteRetentionSeconds = Integer.parseInt(appProperties
+                .getProperty("graphiteRetentionSeconds", "60"));
+        requests = Application.metricRegistry
+                //.histogram(name("requests"), () -> new Histogram(new AutoResettableUniformReservoir()));
+                .histogram(name("requests"), () -> new Histogram(new SlidingTimeWindowReservoir(graphiteRetentionSeconds,TimeUnit.SECONDS)));
         metricsReporter =
                 useInternalMeter ? new MetricsReporter(3, eventMeter, requestSizeMeter) : null;
         bandwidthBytes = Math.round(Double
