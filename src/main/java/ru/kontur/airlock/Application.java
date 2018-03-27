@@ -51,6 +51,7 @@ public class Application {
     }
 
     private static void shutdown() {
+        Log.info("Shutdown signal triggered");
         httpServer.shutdown();
         Log.info("HTTP server stopped");
 
