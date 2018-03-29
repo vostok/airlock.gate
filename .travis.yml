@@ -18,4 +18,4 @@ deploy:
   skip_cleanup: true
   on:
     repo: vostok/airlock.gate
-    all_branches: false
+    all_branches: true
